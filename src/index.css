@@ -1,0 +1,156 @@
+/* 导入组件样式 */
+@import './styles.css';
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Markdown 预览样式 */
+.markdown-preview {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.8;
+  color: #333;
+}
+
+.markdown-preview h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 1.2em 0 0.6em 0;
+  color: #1a1a1a;
+  border-bottom: 2px solid #e8e8e8;
+  padding-bottom: 0.3em;
+}
+
+.markdown-preview h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1em 0 0.5em 0;
+  color: #2a2a2a;
+}
+
+.markdown-preview h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0.8em 0 0.4em 0;
+  color: #3a3a3a;
+}
+
+.markdown-preview h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.6em 0 0.3em 0;
+  color: #4a4a4a;
+}
+
+.markdown-preview p {
+  margin: 0.8em 0;
+  text-align: justify;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  margin: 0.8em 0;
+  padding-left: 1.8em;
+}
+
+.markdown-preview li {
+  margin: 0.4em 0;
+}
+
+.markdown-preview ul li {
+  list-style-type: disc;
+}
+
+.markdown-preview ol li {
+  list-style-type: decimal;
+}
+
+.markdown-preview strong {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.markdown-preview em {
+  font-style: italic;
+}
+
+.markdown-preview code {
+  background-color: #f5f5f5;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.markdown-preview pre {
+  background-color: #f5f5f5;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.markdown-preview pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-preview blockquote {
+  border-left: 4px solid #e8e8e8;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #666;
+}
+
+.markdown-preview a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.markdown-preview a:hover {
+  text-decoration: underline;
+}
+
+.markdown-preview hr {
+  border: none;
+  border-top: 1px solid #e8e8e8;
+  margin: 2em 0;
+}
+
+/* 表格样式 */
+.markdown-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+  border: 1px solid #e8e8e8;
+  padding: 0.6em 1em;
+  text-align: left;
+}
+
+.markdown-preview th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+}
+
+.markdown-preview tr:hover {
+  background-color: #f9f9f9;
+}
