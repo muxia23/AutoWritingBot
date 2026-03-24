@@ -15,12 +15,7 @@ export const FIXED_PERSONS = [
 export const ACTIVITY_TYPES = [
   '参观',
   '座谈',
-  '调研',
   '讲座',
-  '实践',
-  '交流',
-  '会议',
-  '其他'
 ];
 
 // 批注类型

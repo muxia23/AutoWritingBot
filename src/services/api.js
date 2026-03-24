@@ -76,14 +76,15 @@ export const ApiService = {
    * @param {function} onChunk - 每收到一段文字回调 (delta: string) => void
    * @returns {Promise<string>} 完整响应文本
    */
-  async postStream(url, data, headers = {}, onChunk) {
+  async postStream(url, data, headers = {}, onChunk, signal) {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...headers
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      signal
     });
 
     if (!response.ok) {
@@ -102,31 +103,37 @@ export const ApiService = {
     let fullText = '';
     let buffer = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      // 最后一行可能不完整，留到下次拼接
-      buffer = lines.pop();
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        // 最后一行可能不完整，留到下次拼接
+        buffer = lines.pop();
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed === 'data: [DONE]') continue;
-        if (!trimmed.startsWith('data: ')) continue;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed === 'data: [DONE]') continue;
+          if (!trimmed.startsWith('data: ')) continue;
 
-        try {
-          const json = JSON.parse(trimmed.slice(6));
-          const delta = json.choices?.[0]?.delta?.content || '';
-          if (delta) {
-            fullText += delta;
-            onChunk?.(delta, fullText);
+          try {
+            const json = JSON.parse(trimmed.slice(6));
+            const delta = json.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              fullText += delta;
+              onChunk?.(delta, fullText);
+            }
+          } catch {
+            // 跳过解析失败的行
           }
-        } catch {
-          // 跳过解析失败的行
         }
       }
+    } catch (error) {
+      reader.cancel();
+      if (error.name === 'AbortError') return fullText;
+      throw error;
     }
 
     return fullText;

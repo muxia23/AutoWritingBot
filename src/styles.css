@@ -1485,11 +1485,20 @@ body::before {
 .chat-sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
   overflow: hidden;
+}
+
+.chat-sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  min-height: 0;
 }
 
 .chat-sidebar-header {
@@ -2129,7 +2138,8 @@ body::before {
 .canvas-editor {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .canvas-header {
@@ -3383,4 +3393,199 @@ body::before {
     box-shadow: none;
     border: none;
   }
+}
+
+/* ========================================
+   Pipeline 工作流面板
+   ======================================== */
+
+.pipeline-status-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-sm) var(--space-md);
+  min-height: 0;
+}
+
+.pipeline-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.pipeline-empty-hint {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
+.pipeline-step {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-primary);
+  transition: border-color 0.2s;
+}
+
+.pipeline-step.running {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.pipeline-step.done {
+  border-color: var(--success-color, #4caf50);
+}
+
+.pipeline-step.error {
+  border-color: var(--error-color, #ef4444);
+}
+
+.pipeline-step-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.pipeline-step-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pipeline-step-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.pipeline-step-desc {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+
+.pipeline-step-duration {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pipeline-step-toggle {
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+}
+
+/* Step status icons */
+.pipeline-step-icon {
+  flex-shrink: 0;
+}
+
+.pipeline-step-icon.pending {
+  color: var(--text-tertiary);
+}
+
+.pipeline-step-icon.running {
+  color: var(--accent-primary);
+  animation: spin 1s linear infinite;
+}
+
+.pipeline-step-icon.done {
+  color: var(--success-color, #4caf50);
+}
+
+.pipeline-step-icon.error {
+  color: var(--error-color, #ef4444);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Step output area */
+.pipeline-step-output {
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--border-light);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+}
+
+.pipeline-step-output.streaming {
+  max-height: 120px;
+  color: var(--text-primary);
+  font-size: 0.74rem;
+}
+
+/* 可折叠区块标签 */
+.quick-option-label.collapsible {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  user-select: none;
+}
+
+.quick-option-label.collapsible:hover {
+  color: var(--text-primary);
+}
+
+.collapse-toggle {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+}
+
+.collapsed-summary {
+  font-size: 0.72rem;
+  color: var(--accent-primary);
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pipeline 状态栏（画布底部） */
+.canvas-pipeline-bar {
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  max-height: 220px;
+  overflow-y: auto;
+  padding: var(--space-sm) var(--space-md);
+  flex-shrink: 0;
+}
+
+/* 活动类型自定义输入 */
+.activity-type-input {
+  width: 100%;
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.8rem;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.activity-type-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.activity-type-input::placeholder {
+  color: var(--text-tertiary);
 }

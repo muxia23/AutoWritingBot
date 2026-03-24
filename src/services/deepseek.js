@@ -68,7 +68,7 @@ export const DeepSeekAPI = {
    * @param {Object} modelConfig
    * @param {function} onChunk - (delta, fullText) => void
    */
-  async chatWithHistoryStream(systemPrompt, messages, modelConfig, onChunk) {
+  async chatWithHistoryStream(systemPrompt, messages, modelConfig, onChunk, signal) {
     const {
       apiKey,
       baseUrl = DEFAULTS.baseUrl,
@@ -91,7 +91,7 @@ export const DeepSeekAPI = {
 
     return ApiService.postStream(url, body, {
       'Authorization': `Bearer ${apiKey}`
-    }, onChunk);
+    }, onChunk, signal);
   },
 
   /**

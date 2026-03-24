@@ -1,195 +1,185 @@
-# 学院公众号推文生成器 - React 版本
+<div align="center">
 
-基于 DeepSeek API 的学院公众号推文生成器，使用 React + Vite 重构，新增多轮对话修改功能。
+# 🖊️ AutoWritingBot
 
-## 功能特性
+**AI-powered WeChat Official Account article generator with multi-stage pipeline**
 
-### 核心功能
-- ✨ **推文生成**：根据活动主题、时间、地点、参与人员等信息生成专业推文
-- 🔧 **推文优化**：提供多种优化方向（全面优化、检查人名顺序、调整风格等）
-- 📝 **批注编辑**：新增多轮对话修改功能，支持批注/评论模式
-- 📚 **Skills 编辑**：自定义系统提示词，控制生成风格和质量
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/yourname/AutoWritingBot/pulls)
 
-### 新增功能
-- 🎯 **批注系统**：文本选中添加批注，支持重写、修正、风格调整三种类型
-- 🔄 **修改范围**：可选择局部修改或全局优化
-- 📜 **对话历史**：自动保存每次修改记录
-- 📥 **导入/导出**：支持对话历史的 JSON 文件导入/导出
-- 🎨 **现代化 UI**：使用 Lucide React 图标库，更好的视觉体验
+[English](#english) · [功能特性](#-功能特性) · [快速开始](#-快速开始) · [部署](#-生产部署) · [截图](#-截图)
 
-## 技术栈
+</div>
 
-- **框架**：React 18
-- **构建工具**：Vite
-- **路由**：React Router DOM
-- **图标**：Lucide React
-- **状态管理**：React Context + Hooks
-- **样式**：CSS Modules
-- **API**：DeepSeek API
+---
 
-## 快速开始
+## 简介
 
-### 安装依赖
+AutoWritingBot 是一个面向高校学院公众号编辑的 AI 写作工具。输入活动信息后，系统自动运行 **4 步 Pipeline**，依次完成素材整理 → 初稿生成 → 质量评估 → 精炼优化，全程流式输出，支持随时中断和手动批注修改。
+
+支持 DeepSeek、OpenAI、Claude 等任意 OpenAI 兼容 API。
+
+## ✨ 功能特性
+
+### 🔄 多阶段 AI Pipeline
+
+一键触发，自动完成 4 个步骤，无需手动多次提交：
+
+| 步骤  | 任务                            | 输出                |
+| :---: | ------------------------------- | ------------------- |
+| **①** | 整理素材 — 结构化分析活动信息   | 画布底部面板        |
+| **②** | 生成初稿 — 按规范生成完整推文   | Canvas 实时流式更新 |
+| **③** | 质量评估 — 自动审核、列出改进点 | 画布底部面板        |
+| **④** | 精炼优化 — 依评估修改输出终稿   | Canvas 实时流式更新 |
+
+### ✍️ Canvas 编辑器
+
+- 预览 / 编辑模式切换
+- 选中文字弹出批注气泡，支持**重写 / 修正 / 风格调整**三种类型
+- 多条批注可一键批量应用
+- 一键复制全文 · 导出 Word（`.docx`）
+
+### 🤖 多模型支持
+
+- 内置 DeepSeek / OpenAI / Anthropic 预设
+- 支持任意 OpenAI 兼容 API（自定义 Base URL）
+- 多模型配置，随时切换，配置本地加密存储
+
+### 🖼️ 图片库
+
+- 上传活动图片，AI 自动识别生成描述
+- 附加到推文生成时，AI 在对应段落标注插图位置
+
+### 📎 参考推文导入
+
+- 输入微信公众号文章链接，自动提取正文内容作为风格参考
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Node.js ≥ 18
+- 任意 OpenAI 兼容 API Key（如 [DeepSeek](https://platform.deepseek.com)）
+
+### 安装
 
 ```bash
+git clone https://github.com/muxia23/AutoWritingBot.git
+cd AutoWritingBot
 npm install
-```
-
-### 开发模式
-
-```bash
 npm run dev
 ```
 
-访问 http://localhost:5173
+访问 [http://localhost:5173](http://localhost:5173)
 
-### 生产构建
+### 首次使用
+
+1. 点击右上角 **「模型管理」**，添加 API Key 和模型配置
+2. 在左侧选择活动类型、参与领导，填写活动描述
+3. 点击 **「开始生成」**，等待 Pipeline 自动完成
+
+## 📦 生产部署
 
 ```bash
+npm run build   # 产物输出到 dist/
+```
+
+将 `dist/` 上传至服务器后，**nginx 配置需包含以下内容**（React Router + 微信代理）：
+
+```nginx
+server {
+    # ... SSL 证书等配置 ...
+
+    root /path/to/dist;
+
+    # ✅ React Router 前端路由
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ✅ 微信公众号文章代理（解决 CORS）
+    location /weixin-proxy/ {
+        proxy_pass https://mp.weixin.qq.com/;
+        proxy_set_header Host mp.weixin.qq.com;
+        proxy_set_header User-Agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+        proxy_set_header Referer "https://mp.weixin.qq.com/";
+        proxy_ssl_server_name on;
+        proxy_ssl_protocols TLSv1.2 TLSv1.3;
+    }
+}
+```
+
+```bash
+nginx -t && nginx -s reload
+```
+
+## 🗂️ 项目结构
+
+```
+src/
+├── components/
+│   ├── canvas/          # Canvas 编辑器 + 批注组件
+│   ├── pipeline/        # Pipeline 状态面板
+│   ├── images/          # 图片库相关
+│   ├── layout/          # Header、TabNav、Modal
+│   └── common/          # Toast、EmptyState 等
+├── hooks/
+│   ├── usePipeline.js   # 4步 Pipeline 状态管理
+│   └── useConversation.js
+├── services/
+│   ├── deepseek.js      # LLM API 封装（流式 + 普通）
+│   └── api.js           # HTTP 层（SSE、AbortController）
+├── context/
+│   ├── AppContext.jsx   # 模型管理、Toast
+│   └── PromptContext.jsx
+├── pages/
+│   ├── ChatGeneratePage.jsx  # 主页面
+│   ├── ImageLibraryPage.jsx
+│   └── PromptPage.jsx
+└── utils/
+    ├── constants.js
+    └── default-prompt.js    # 默认系统提示词
+```
+
+## ⚙️ 技术栈
+
+| 类别 | 技术                     |
+| ---- | ------------------------ |
+| 框架 | React 18 + Vite 5        |
+| 路由 | React Router DOM 6       |
+| 图标 | Lucide React             |
+| 状态 | React Context + Hooks    |
+| AI   | OpenAI 兼容 SSE 流式接口 |
+| 导出 | docx                     |
+| 存储 | localStorage（纯客户端） |
+
+## 🔒 隐私说明
+
+- 所有配置（API Key、提示词、图片库）均存储在**本地浏览器**，不经过任何中间服务器
+- API 请求由浏览器直接发送至对应的 AI 服务商
+
+## 🤝 Contributing
+
+欢迎提交 Issue 和 Pull Request。
+
+```bash
+# 开发
+npm run dev
+
+# 构建
 npm run build
 ```
 
-### 预览构建结果
+## 📄 License
 
-```bash
-npm run preview
-```
+[MIT](LICENSE) © 2025
 
-## 使用说明
+---
 
-### 1. API 配置
+<div align="center">
 
-首次使用前需要配置 DeepSeek API Key：
-1. 点击右上角 "API 配置" 按钮
-2. 输入您的 DeepSeek API Key
-3. 点击保存
+如果这个项目对你有帮助，欢迎点个 ⭐
 
-API Key 仅存储在本地浏览器，不会上传到任何服务器。
-
-### 2. 推文生成
-
-1. 填写生成参数：
-   - 文章主题（必填）
-   - 活动类型（必填）
-   - 时间、地点
-   - 参与领导（按固定顺序选择）
-   - 活动对象
-   - 关键信息/事件要点（必填）
-   - 图片描述、额外说明
-2. 点击"生成推文"按钮
-3. 预览生成的推文，可复制或下载
-4. 点击"继续编辑"进入批注编辑模式
-
-### 3. 推文优化
-
-1. 选择优化方向：
-   - 全面优化
-   - 检查和修正人名顺序
-   - 调整语言风格为正式书面语
-   - 完善推文结构
-   - 优化人称和代词使用
-2. 粘贴需要优化的原始文案
-3. 点击"优化推文"按钮
-4. 预览优化结果
-
-### 4. 批注编辑（新功能）
-
-1. 在推文编辑器中选中文本
-2. 弹出批注对话框，选择：
-   - 批注类型：重写、修正、风格调整
-   - 批注内容：具体修改要求
-   - 修改范围：局部修改 / 全局优化
-3. 添加批注后，推文中会显示批注标记
-4. 点击"应用批注"按钮，根据批注内容修改推文
-5. 修改结果会自动保存到对话历史
-
-### 5. 对话历史管理
-
-- **查看历史**：在编辑页面右侧显示所有对话历史
-- **恢复版本**：点击历史记录可恢复任意版本
-- **导出历史**：支持导出单个或全部对话历史为 JSON 文件
-- **导入历史**：从 JSON 文件恢复对话历史
-
-### 6. Skills 编辑
-
-1. 进入 "Skills 编辑" 页面
-2. 编辑系统提示词内容
-3. 点击"保存"应用自定义 Skills
-4. 点击"恢复默认"可重置为初始内容
-
-## 批注类型说明
-
-| 类型 | 说明 | 示例 |
-|------|------|------|
-| 重写 | 对选中文本进行重新撰写 | 请将这段文字改写为更正式的表达 |
-| 修正 | 修正选中文本的错误或问题 | 这里的人名顺序有误，请按固定顺序调整 |
-| 风格调整 | 调整选中文本的风格或语气 | 请将这段文字改为更委婉的表达 |
-
-## 修改范围说明
-
-| 范围 | 说明 | 适用场景 |
-|------|------|----------|
-| 局部修改 | 仅修改标注的部分 | 修改具体错误、调整段落内容 |
-| 全局优化 | 根据批注修改后，重新检查整篇文章 | 大幅修改、结构调整 |
-
-## Skills 规范
-
-生成的推文必须严格遵守以下规则：
-
-### 人名顺序
-1. 常务副院长方捷（男）
-2. 党委书记翁穗平（女）
-3. 党委副书记王涛（女）
-4. 副院长黄彩进（男）
-5. 辅导员（可自定义姓名）
-
-### 代词使用
-- 女性（翁穗平、王涛）：使用"她"
-- 男性（方捷、黄彩进）：使用"他"
-- 不使用英文代词
-- 不使用第一人称"我"
-
-### 推文结构
-1. **开头**：活动目的与整体概括
-2. **正文**：时间地点 + 参观游览 + 具体活动内容
-3. **领导总结**：领导总结性发言
-4. **结尾**：意义升华、学院宣传与展望
-
-### 语言风格
-- 使用正式、庄重、积极向上的书面语
-- 不使用网络流行语、俚语或口语化表达
-- 使用中文标点符号
-
-## 数据存储
-
-所有数据均存储在本地浏览器中：
-- API Key
-- 自定义 Skills 内容
-- 对话历史
-- 编辑器内容（自动保存）
-
-## 浏览器支持
-
-- Chrome（推荐）
-- Firefox
-- Safari
-- Edge
-
-## 许可证
-
-MIT License
-
-## 更新日志
-
-### v2.0.0 (2024-03-16)
-- 🎉 重构为 React + Vite 架构
-- ✨ 新增批注编辑功能
-- 📜 新增对话历史管理
-- 📥 支持导入/导出功能
-- 🎨 优化 UI/UX 设计
-- 🔧 改进代码结构和可维护性
-
-### v1.0.0
-- 初始版本（纯 HTML/JS/CSS）
-- 支持推文生成和优化
-- 支持 Skills 编辑
+</div>
