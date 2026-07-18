@@ -5,12 +5,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage.js';
 import { STORAGE_KEYS, FILE_TEMPLATES } from '../utils/constants.js';
+import { appendConversation } from '../utils/historyUtils.js';
 
 // 生成对话 ID
 const generateConversationId = () => `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-export function useConversationHistory() {
-  const [history, setHistory, removeHistory] = useLocalStorage(STORAGE_KEYS.CONVERSATION_HISTORY, []);
+export function useConversationHistory(onError) {
+  const [history, setHistory, removeHistory] = useLocalStorage(STORAGE_KEYS.CONVERSATION_HISTORY, [], onError);
   const [currentConversation, setCurrentConversation] = useState(null);
 
   // 添加新对话
@@ -24,7 +25,7 @@ export function useConversationHistory() {
       annotations: data.annotations || [],
       title: data.title || '未命名对话'
     };
-    setHistory(prev => [newConversation, ...prev]);
+    setHistory(prev => appendConversation(prev, newConversation));
     return newConversation;
   }, [setHistory]);
 
