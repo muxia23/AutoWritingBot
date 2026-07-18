@@ -476,7 +476,7 @@ export default function ChatGeneratePage() {
         {/* Pipeline 状态面板（画布底部） */}
         {steps.some(s => s.status !== 'pending') && (
           <div className="canvas-pipeline-bar">
-            <PipelinePanel steps={steps} isRunning={isRunning} currentStepId={currentStepId} />
+            <PipelinePanel steps={steps} isRunning={isRunning} currentStepId={currentStepId} isDone={isDone} />
           </div>
         )}
       </div>
