@@ -2,10 +2,14 @@
  * localStorage 自定义 Hook
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
-export function useLocalStorage(key, initialValue = '') {
-  // 获取初始值
+/**
+ * @param {string} key
+ * @param {*} initialValue
+ * @param {(error: Error) => void} [onError] 写入/读取失败时的回调（如配额超限）
+ */
+export function useLocalStorage(key, initialValue = '', onError) {
   const [storedValue, setStoredValue] = useState(() => {
     try {
       const item = localStorage.getItem(key);
@@ -16,26 +20,27 @@ export function useLocalStorage(key, initialValue = '') {
     }
   });
 
-  // 更新 localStorage 和 state
   const setValue = useCallback((value) => {
+    const valueToStore = value instanceof Function ? value(storedValue) : value;
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
       localStorage.setItem(key, JSON.stringify(valueToStore));
+      setStoredValue(valueToStore);
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
+      setStoredValue(valueToStore);
+      if (onError) onError(error);
     }
-  }, [key, storedValue]);
+  }, [key, storedValue, onError]);
 
-  // 删除值
   const removeValue = useCallback(() => {
     try {
       localStorage.removeItem(key);
       setStoredValue(initialValue);
     } catch (error) {
       console.error(`Error removing localStorage key "${key}":`, error);
+      if (onError) onError(error);
     }
-  }, [key, initialValue]);
+  }, [key, initialValue, onError]);
 
   return [storedValue, setValue, removeValue];
 }
