@@ -28,6 +28,30 @@ export const Formatters = {
   /**
    * 格式化日期时间
    */
+  /**
+   * 紧凑的相对时间，用于历史列表
+   * 今天/昨天只显示时刻，本年省略年份，跨年显示完整日期
+   */
+  formatRelativeDateTime(timestamp) {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return '';
+    const now = new Date();
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const time = `${hh}:${mm}`;
+
+    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const dayDiff = Math.round((startOfDay(now) - startOfDay(date)) / 86400000);
+
+    if (dayDiff === 0) return `今天 ${time}`;
+    if (dayDiff === 1) return `昨天 ${time}`;
+
+    const M = String(date.getMonth() + 1).padStart(2, '0');
+    const D = String(date.getDate()).padStart(2, '0');
+    if (date.getFullYear() === now.getFullYear()) return `${M}-${D} ${time}`;
+    return `${date.getFullYear()}-${M}-${D}`;
+  },
+
   formatDateTime(timestamp) {
     const date = new Date(timestamp);
     const year = date.getFullYear();

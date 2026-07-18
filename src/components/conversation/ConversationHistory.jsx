@@ -68,10 +68,11 @@ export default function ConversationHistory({
   return (
     <div className="conversation-history">
       <div className="history-header">
-        <div className="history-title">
-          <Clock size={20} />
-          <h3>对话历史 ({history.length})</h3>
-        </div>
+        {/* 不重复弹窗标题，这里只做计数与操作条 */}
+        <span className="history-count">
+          <Clock size={14} />
+          {history.length} 条记录
+        </span>
         <div className="history-actions">
           <button
             className="btn btn-secondary btn-sm"
@@ -104,6 +105,7 @@ export default function ConversationHistory({
             conversation={conversation}
             onSelect={() => onSelectConversation?.(conversation)}
             onDelete={() => onDeleteConversation?.(conversation.id)}
+            onExport={() => exportHistory(conversation.id)}
           />
         ))}
       </div>

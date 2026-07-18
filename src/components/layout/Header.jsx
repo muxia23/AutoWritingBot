@@ -15,7 +15,10 @@ export default function Header() {
     <>
       <header className="header">
         <div className="header-content">
-          <h1 className="app-title">学院公众号推文生成器</h1>
+          <div className="app-brand">
+            <img src="/favicon.svg" alt="" className="app-logo" />
+            <h1 className="app-title">学院公众号推文生成器</h1>
+          </div>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => setShowModelManager(true)}

@@ -74,7 +74,12 @@ export const API_STATUS = {
 // 文件名模板
 export const FILE_TEMPLATES = {
   article: (date, title) => `${date}_${title.slice(0, 20)}.md`,
-  history: () => `conversation_history_${new Date().toISOString().split('T')[0]}.json`
+  history: () => `对话历史_全部_${new Date().toISOString().split('T')[0]}.json`,
+  // 单条记录：用标题做文件名，剥掉文件系统不接受的字符
+  conversation: (title) => {
+    const safe = (title || '未命名推文').replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 40);
+    return `${safe || '未命名推文'}_${new Date().toISOString().split('T')[0]}.json`;
+  }
 };
 
 // 预设模型（OpenAI 兼容接口）
@@ -91,6 +96,7 @@ export const PRESET_MODELS = [
 export const STORAGE_KEYS = {
   API_KEY: 'deepseek_api_key',
   CUSTOM_PROMPT: 'custom_prompt',
+  STEP_PROMPTS: 'step_prompts',
   CONVERSATION_HISTORY: 'conversation_history',
   USER_PREFERENCES: 'user_preferences',
   MODEL_CONFIGS: 'model_configs',

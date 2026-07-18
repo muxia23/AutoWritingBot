@@ -1,84 +1,70 @@
 /**
- * 导入/导出对话框组件
+ * 导入对话历史
+ *
+ * 导出不在这里：整体导出是工具栏的「导出全部」，单条导出是每条记录上的下载按钮。
+ * 原先这里有个「导出」标签页，内容只是提示用户去别处点按钮，是个死胡同，已移除。
  */
 
 import { useState, useRef } from 'react';
 import Modal from '../layout/Modal.jsx';
-import { Download, Upload, FileJson } from 'lucide-react';
+import { UploadCloud } from 'lucide-react';
+import { MAX_HISTORY } from '../../utils/historyUtils.js';
 
 export default function ImportExport({ onClose, onImport }) {
   const fileInputRef = useRef(null);
-  const [activeTab, setActiveTab] = useState('import');
+  const [dragging, setDragging] = useState(false);
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      onImport(file);
+  const pick = (file) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      alert('请选择 .json 格式的备份文件');
+      return;
     }
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
+    onImport(file);
   };
 
   return (
-    <Modal onClose={onClose} title="导入/导出对话历史">
-      <div className="import-export-modal">
-        <div className="import-export-tabs">
-          <button
-            className={`tab ${activeTab === 'import' ? 'active' : ''}`}
-            onClick={() => setActiveTab('import')}
-          >
-            <Upload size={16} />
-            导入历史
-          </button>
-          <button
-            className={`tab ${activeTab === 'export' ? 'active' : ''}`}
-            onClick={() => setActiveTab('export')}
-          >
-            <Download size={16} />
-            导出历史
-          </button>
+    <Modal onClose={onClose} title="导入对话历史">
+      <div className="import-panel">
+        <div
+          className={`import-dropzone ${dragging ? 'dragging' : ''}`}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            pick(e.dataTransfer.files?.[0]);
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+        >
+          <UploadCloud size={32} />
+          <p className="import-dropzone-main">把备份文件拖到这里，或点击选择</p>
+          <p className="import-dropzone-sub">支持导出的 .json 文件，可以是全部历史或单条记录</p>
         </div>
 
-        {activeTab === 'export' && (
-          <div className="import-export-content">
-            <div className="export-instructions">
-              <FileJson size={48} />
-              <h3>导出对话历史</h3>
-              <p>导出的对话历史将以 JSON 格式保存到本地，可用于备份或迁移到其他设备。</p>
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={onClose}
-              >
-                使用历史列表中的导出按钮
-              </button>
-            </div>
-          </div>
-        )}
+        <ul className="import-notes">
+          <li>导入的记录会排在现有记录前面，不会覆盖已有内容。</li>
+          <li>历史最多保留 {MAX_HISTORY} 条，超出的最旧记录会被自动清理。</li>
+        </ul>
 
-        {activeTab === 'import' && (
-          <div className="import-export-content">
-            <div className="import-instructions">
-              <Upload size={48} />
-              <h3>导入对话历史</h3>
-              <p>请选择之前导出的 JSON 文件以恢复对话历史。</p>
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={handleImportClick}
-              >
-                选择文件
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                style={{ display: 'none' }}
-                onChange={handleFileSelect}
-              />
-            </div>
-          </div>
-        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            pick(e.target.files?.[0]);
+            e.target.value = '';
+          }}
+        />
       </div>
     </Modal>
   );

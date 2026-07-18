@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stripPersonTitle } from './formatters.js';
+import { stripPersonTitle, Formatters } from './formatters.js';
 
 describe('stripPersonTitle', () => {
   it('去掉各类职务前缀', () => {
@@ -28,5 +28,42 @@ describe('stripPersonTitle', () => {
   it('空值不抛异常', () => {
     expect(stripPersonTitle('')).toBe('');
     expect(stripPersonTitle(undefined)).toBe('');
+  });
+});
+
+describe('formatRelativeDateTime', () => {
+  const at = (d, h = 9, m = 5) => {
+    const x = new Date();
+    x.setHours(h, m, 0, 0);
+    x.setDate(x.getDate() - d);
+    return x.getTime();
+  };
+
+  it('今天显示「今天 HH:MM」', () => {
+    expect(Formatters.formatRelativeDateTime(at(0, 20, 53))).toBe('今天 20:53');
+  });
+
+  it('昨天显示「昨天 HH:MM」', () => {
+    expect(Formatters.formatRelativeDateTime(at(1, 8, 7))).toBe('昨天 08:07');
+  });
+
+  it('更早的本年日期省略年份', () => {
+    const ts = at(10, 14, 30);
+    const d = new Date(ts);
+    if (d.getFullYear() === new Date().getFullYear()) {
+      const M = String(d.getMonth() + 1).padStart(2, '0');
+      const D = String(d.getDate()).padStart(2, '0');
+      expect(Formatters.formatRelativeDateTime(ts)).toBe(`${M}-${D} 14:30`);
+    }
+  });
+
+  it('跨年显示完整日期', () => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 2, 2, 9);
+    expect(Formatters.formatRelativeDateTime(d.getTime())).toBe(`${d.getFullYear()}-03-09`);
+  });
+
+  it('无效时间戳返回空串', () => {
+    expect(Formatters.formatRelativeDateTime(NaN)).toBe('');
   });
 });

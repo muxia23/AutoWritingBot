@@ -26,7 +26,7 @@ export default function ChatGeneratePage() {
   const { activeModel, modelConfigs, activeModelId, setActiveModelId, showToast } = useApp();
   const { images } = useImageContext();
   const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const { buildSystemPrompt } = usePromptContext();
+  const { buildSystemPrompt, getStepPrompt } = usePromptContext();
   const {
     currentArticle,
     currentTitle,
@@ -54,6 +54,7 @@ export default function ChatGeneratePage() {
 
   const { steps, isRunning, currentStepId, isDone, runPipeline, abort, resetSteps } = usePipeline({
     buildSystemPrompt,
+    getStepPrompt,
     activeModel,
     setCurrentArticle,
     setCurrentTitle,
@@ -447,7 +448,7 @@ export default function ChatGeneratePage() {
           />
         )}
         {showHistory && (
-          <Modal onClose={() => setShowHistory(false)} title="对话历史">
+          <Modal onClose={() => setShowHistory(false)} title="对话历史" className="modal-history">
             <div className="history-modal-body">
               <ConversationHistory
                 onSelectConversation={handleSelectConversation}

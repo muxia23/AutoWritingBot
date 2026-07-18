@@ -64,11 +64,15 @@ export function useConversationHistory(onError) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = FILE_TEMPLATES.history();
+    link.download = conversationId
+      ? FILE_TEMPLATES.conversation(dataToExport.title)
+      : FILE_TEMPLATES.history();
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // 下载是异步的：同步 revoke 会在浏览器读完 blob 前就吊销 URL，
+    // 结果是下载列表里有条目但文件为空、打不开。必须延后回收。
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
     return dataToExport;
   }, [history]);

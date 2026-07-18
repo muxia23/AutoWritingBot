@@ -13,31 +13,6 @@ const PIPELINE_STEPS = [
   { id: 'refine',   name: '精炼优化', description: '根据评估意见完善推文' },
 ];
 
-const STEP_PROMPTS = {
-  organize: `你是一位写作助手，请将用户提供的活动信息整理成结构化素材简报，包括：
-1. 活动概述（类型/核心内容）
-2. 关键参与人员及其身份
-3. 活动重点/亮点
-4. 建议写作角度和基调
-
-不要生成推文，只输出结构化的素材简报。`,
-
-  evaluate: `你是一位严格的微信公众号编辑，请对推文初稿进行审核，列出需要改进的具体问题：
-1. 与原始素材的一致性（是否有不符或遗漏的重要信息）
-2. 语言质量（重复用词、生硬表达、语句不通顺）
-3. 结构问题（段落逻辑、过渡是否自然）
-4. 内容缺失（是否遗漏重要细节）
-
-输出简洁的问题清单，每条问题一行，以"-"开头。如果初稿质量良好，输出"- 整体质量良好"并给出1-2条细节建议。`,
-
-  refine: `请根据评估意见对推文初稿进行修改和完善，输出完整的最终版本。
-要求：
-- 保留初稿整体结构和核心内容
-- 针对每条评估问题进行改进
-- 语言流畅自然，符合微信公众号推文风格
-- 直接输出完整推文，以 # [标题] 开头，无需任何前缀说明`,
-};
-
 const STEP_USER_MSGS = {
   draft:    '请根据以上素材简报，按照要求生成推文初稿。',
   evaluate: '请对上面的推文初稿进行质量评估，列出具体问题。',
@@ -57,7 +32,7 @@ function parseArticle(text) {
   return { title: '', content: text };
 }
 
-export function usePipeline({ buildSystemPrompt, activeModel, setCurrentArticle, setCurrentTitle, showToast }) {
+export function usePipeline({ buildSystemPrompt, getStepPrompt, activeModel, setCurrentArticle, setCurrentTitle, showToast }) {
   const [steps, setSteps] = useState(
     PIPELINE_STEPS.map(s => ({ ...s, status: 'pending', output: '', duration: 0 }))
   );
@@ -112,7 +87,7 @@ export function usePipeline({ buildSystemPrompt, activeModel, setCurrentArticle,
 
       let step1Out = '';
       await DeepSeekAPI.chatWithHistoryStream(
-        STEP_PROMPTS.organize,
+        getStepPrompt('organize'),
         history,
         activeModel,
         (_delta, fullText) => {
@@ -161,7 +136,7 @@ export function usePipeline({ buildSystemPrompt, activeModel, setCurrentArticle,
 
       let step3Out = '';
       await DeepSeekAPI.chatWithHistoryStream(
-        STEP_PROMPTS.evaluate,
+        getStepPrompt('evaluate'),
         history,
         activeModel,
         (_delta, fullText) => {
@@ -182,7 +157,7 @@ export function usePipeline({ buildSystemPrompt, activeModel, setCurrentArticle,
 
       let step4Out = '';
       await DeepSeekAPI.chatWithHistoryStream(
-        STEP_PROMPTS.refine,
+        getStepPrompt('refine'),
         history,
         activeModel,
         (_delta, fullText) => {
@@ -216,7 +191,7 @@ export function usePipeline({ buildSystemPrompt, activeModel, setCurrentArticle,
     } finally {
       setIsRunning(false);
     }
-  }, [activeModel, buildSystemPrompt, setCurrentArticle, setCurrentTitle, showToast, resetSteps, updateStep]);
+  }, [activeModel, buildSystemPrompt, getStepPrompt, setCurrentArticle, setCurrentTitle, showToast, resetSteps, updateStep]);
 
   return { steps, isRunning, currentStepId, isDone, runPipeline, abort, resetSteps };
 }

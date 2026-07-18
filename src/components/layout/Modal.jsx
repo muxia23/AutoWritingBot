@@ -5,7 +5,7 @@
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
 
-export default function Modal({ children, onClose, title }) {
+export default function Modal({ children, onClose, title, className = '' }) {
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -19,7 +19,7 @@ export default function Modal({ children, onClose, title }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal ${className}`.trim()} onClick={(e) => e.stopPropagation()}>
         {title && (
           <div className="modal-header">
             <h3 className="modal-title">{title}</h3>
