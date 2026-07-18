@@ -269,7 +269,7 @@ export default function ModelManager({ onClose }) {
                   type="number"
                   min="1"
                   step="100"
-                  placeholder="默认 4000"
+                  placeholder="默认 8000"
                   value={form.maxTokens}
                   onChange={e => setForm(p => ({ ...p, maxTokens: e.target.value }))}
                 />

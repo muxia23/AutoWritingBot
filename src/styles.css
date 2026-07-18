@@ -3495,6 +3495,15 @@ body::before {
   color: var(--ink-primary);
 }
 
+/* pipeline 流程标签与工具标签之间的分隔线 */
+.prompt-tabs-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 4px;
+  background: var(--border-medium);
+  flex-shrink: 0;
+}
+
 /* 已自定义标记 */
 .prompt-tab-dot {
   width: 6px;

@@ -13,6 +13,7 @@ import { blobToBase64, canvasToBlob } from '../utils/blobUtils.js';
 import { hasLegacyImages } from '../utils/imageMigration.js';
 import { STORAGE_KEYS } from '../utils/constants.js';
 import { useApp } from './AppContext.jsx';
+import { usePromptContext } from './PromptContext.jsx';
 
 const ImageContext = createContext(null);
 
@@ -59,6 +60,7 @@ function compressImage(file) {
 
 export function ImageProvider({ children }) {
   const { showToast } = useApp();
+  const { getStepPrompt } = usePromptContext();
 
   const handleStorageError = useCallback((error) => {
     if (error?.name === 'QuotaExceededError') {
@@ -119,10 +121,10 @@ export function ImageProvider({ children }) {
     const blob = await getImageBlob(id);
     if (!blob) throw new Error('图片数据缺失，请重新上传');
     const base64 = await blobToBase64(blob);
-    const description = await DeepSeekAPI.analyzeImage(base64, img.mimeType, modelConfig);
+    const description = await DeepSeekAPI.analyzeImage(base64, img.mimeType, modelConfig, getStepPrompt('imageAnalyze'));
     setImages(prev => prev.map(i => i.id === id ? { ...i, description } : i));
     return description;
-  }, [images, setImages]);
+  }, [images, setImages, getStepPrompt]);
 
   return (
     <ImageContext.Provider value={{ images, addImage, updateName, updateDescription, removeImage, analyzeImage }}>

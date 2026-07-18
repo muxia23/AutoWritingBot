@@ -6,14 +6,14 @@
  */
 
 import { useState, useEffect } from 'react';
-import { RotateCcw, X, Save } from 'lucide-react';
+import { RotateCcw, X, Save, Image as ImageIcon, MessageSquareText } from 'lucide-react';
 import Button from '../components/form/Button.jsx';
 import { usePromptContext } from '../context/PromptContext.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { SUCCESS_MESSAGES } from '../utils/constants.js';
 import { Validators } from '../utils/validators.js';
 import { DEFAULT_PROMPT } from '../utils/default-prompt.js';
-import { STEP_PROMPT_META, DEFAULT_STEP_PROMPTS } from '../utils/default-step-prompts.js';
+import { STEP_PROMPT_META, TOOL_PROMPT_META, DEFAULT_STEP_PROMPTS } from '../utils/default-step-prompts.js';
 
 // 按 pipeline 实际执行顺序排列，主提示词是第 2 步「生成初稿」
 const TABS = [
@@ -22,6 +22,10 @@ const TABS = [
   STEP_PROMPT_META[1],
   STEP_PROMPT_META[2],
 ];
+
+// 独立工具提示词（不属于 pipeline 流程），标签用图标代替步骤序号
+const TOOL_ICONS = { imageAnalyze: ImageIcon, annotation: MessageSquareText };
+const ALL_TABS = [...TABS, ...TOOL_PROMPT_META];
 
 export default function PromptPage() {
   const {
@@ -35,7 +39,7 @@ export default function PromptPage() {
   const [hasChanges, setHasChanges] = useState(false);
 
   const isMain = activeTab === 'main';
-  const activeMeta = TABS.find(t => t.id === activeTab);
+  const activeMeta = ALL_TABS.find(t => t.id === activeTab);
 
   const savedValue = isMain ? (customPrompt || DEFAULT_PROMPT) : getStepPrompt(activeTab);
   const defaultValue = isMain ? DEFAULT_PROMPT : DEFAULT_STEP_PROMPTS[activeTab];
@@ -90,7 +94,7 @@ export default function PromptPage() {
       <div className="prompt-editor-container">
         <h2 className="section-title">提示词内容编辑</h2>
         <p className="section-desc">
-          推文生成分 4 个阶段依次执行，每个阶段使用各自的提示词。修改后立即对下一次生成生效。
+          推文生成分 4 个阶段依次执行，每个阶段使用各自的提示词；分隔线右侧是图片识别与批注修改的独立工具提示词。修改后立即对下一次使用生效。
         </p>
 
         <div className="prompt-tabs" role="tablist">
@@ -105,6 +109,24 @@ export default function PromptPage() {
                 onClick={() => switchTab(tab.id)}
               >
                 <span className="prompt-tab-index">{i + 1}</span>
+                <span className="prompt-tab-name">{tab.name}</span>
+                {customized && <span className="prompt-tab-dot" title="已自定义" />}
+              </button>
+            );
+          })}
+          <span className="prompt-tabs-divider" aria-hidden="true" />
+          {TOOL_PROMPT_META.map((tab) => {
+            const Icon = TOOL_ICONS[tab.id];
+            const customized = hasCustomStepPrompt(tab.id);
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                className={`prompt-tab ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => switchTab(tab.id)}
+              >
+                <span className="prompt-tab-index"><Icon size={11} /></span>
                 <span className="prompt-tab-name">{tab.name}</span>
                 {customized && <span className="prompt-tab-dot" title="已自定义" />}
               </button>

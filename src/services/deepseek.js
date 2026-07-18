@@ -4,12 +4,14 @@
 
 import { ApiService } from './api.js';
 import { ERROR_MESSAGES } from '../utils/constants.js';
+import { DEFAULT_STEP_PROMPTS } from '../utils/default-step-prompts.js';
 
 const DEFAULTS = {
   model: 'deepseek-chat',
   baseUrl: 'https://api.deepseek.com',
   temperature: 0.7,
-  maxTokens: 4000
+  // deepseek-chat 输出上限 8192；4000 会截断长推文
+  maxTokens: 8000
 };
 
 export const DeepSeekAPI = {
@@ -118,12 +120,13 @@ export const DeepSeekAPI = {
    * @param {string} base64 - 图片 base64 数据（不含 data:... 前缀）
    * @param {string} mimeType - 图片 MIME 类型（如 image/jpeg）
    * @param {Object} modelConfig - { apiKey, baseUrl?, model? }
+   * @param {string} [prompt] - 识图指令，缺省用默认识图提示词
    */
-  async analyzeImage(base64, mimeType, modelConfig) {
+  async analyzeImage(base64, mimeType, modelConfig, prompt) {
     const messages = [{
       role: 'user',
       content: [
-        { type: 'text', text: '用一两句话简要描述这张图片的活动内容和场景，不超过50字。' },
+        { type: 'text', text: prompt || DEFAULT_STEP_PROMPTS.imageAnalyze },
         { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }
       ]
     }];

@@ -19,7 +19,7 @@ import { downloadAsDocx } from '../../utils/exportDocx.js';
 
 export default function CanvasEditor({ title, content, onTitleChange, onContentChange }) {
   const { activeModel, showToast } = useApp();
-  const { buildSystemPrompt } = usePromptContext();
+  const { getStepPrompt } = usePromptContext();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [viewMode, setViewMode] = useState('preview');
   const [isApplying, setIsApplying] = useState(false);
@@ -76,8 +76,9 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
     }
     setIsApplying(true);
     try {
-      const systemPrompt = buildSystemPrompt();
-      const result = await DeepSeekAPI.applyInlineAnnotation(systemPrompt, content, annotation, activeModel);
+      // 批注应用用独立的编辑提示词：主提示词的「四段结构 + # 标题开头」
+      // 要求会让局部修改重排全文、把标题行混进正文
+      const result = await DeepSeekAPI.applyInlineAnnotation(getStepPrompt('annotation'), content, annotation, activeModel);
       onContentChange(result);
       deleteAnnotation(annotation.id);
       showToast(SUCCESS_MESSAGES.ARTICLE_OPTIMIZED);
@@ -86,7 +87,7 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
     } finally {
       setIsApplying(false);
     }
-  }, [activeModel, buildSystemPrompt, content, onContentChange, deleteAnnotation, showToast]);
+  }, [activeModel, getStepPrompt, content, onContentChange, deleteAnnotation, showToast]);
 
   const handleApplyAllAnnotations = useCallback(async () => {
     const pending = getPendingAnnotations();
@@ -97,8 +98,7 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
     }
     setIsApplying(true);
     try {
-      const systemPrompt = buildSystemPrompt();
-      const result = await DeepSeekAPI.applyAnnotations(systemPrompt, content, pending, activeModel);
+      const result = await DeepSeekAPI.applyAnnotations(getStepPrompt('annotation'), content, pending, activeModel);
       onContentChange(result);
       clearAllAnnotations();
       showToast(SUCCESS_MESSAGES.ARTICLE_OPTIMIZED);
@@ -107,7 +107,7 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
     } finally {
       setIsApplying(false);
     }
-  }, [activeModel, buildSystemPrompt, content, onContentChange, getPendingAnnotations, clearAllAnnotations, showToast]);
+  }, [activeModel, getStepPrompt, content, onContentChange, getPendingAnnotations, clearAllAnnotations, showToast]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
