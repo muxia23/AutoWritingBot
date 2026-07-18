@@ -61,6 +61,15 @@ describe('downloadBundle 命名与缺图', () => {
     expect(names).toHaveLength(2);
   });
 
+  it('文件名与文档内容用同一套修正，标题里的空格不残留', async () => {
+    // 浏览器实测抓到的 bug：文件名走原始 title，内容走 formatArticleText，
+    // 结果压缩包里是「学院 举办 AI 讲座.docx」而正文标题是「学院举办AI讲座」
+    await downloadBundle('学院 举办 AI 讲座', '正文', []);
+    const { unzipSync } = await import('fflate');
+    const names = Object.keys(unzipSync(new Uint8Array(await captured.arrayBuffer())));
+    expect(names).toContain('学院举办AI讲座.docx');
+  });
+
   it('标题里的非法字符被清洗', async () => {
     await downloadBundle('活动/回顾:2026', '正文', []);
     const { unzipSync } = await import('fflate');

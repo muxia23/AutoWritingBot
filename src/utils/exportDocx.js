@@ -112,7 +112,8 @@ export async function downloadAsDocx(title, content) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${(title || '推文').slice(0, 30)}.docx`;
+  // 文件名同样过修正：否则内容里是「学院举办AI讲座」而文件名带空格
+  a.download = `${(formatArticleText(title) || '推文').slice(0, 30)}.docx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

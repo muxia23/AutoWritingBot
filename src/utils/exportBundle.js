@@ -6,6 +6,7 @@
  */
 
 import { buildDocxBlob } from './exportDocx.js';
+import { formatArticleText } from './formatText.js';
 import { getImageBlob } from '../services/imageStore.js';
 
 // 文件系统不接受的字符，与 constants.js 的 FILE_TEMPLATES 保持一致
@@ -49,7 +50,9 @@ async function blobToU8(blob) {
 export async function downloadBundle(title, content, selectedImages = []) {
   const { zipSync } = await import('fflate');
 
-  const docTitle = safeName(title, '推文');
+  // 标题先过格式修正再做文件名：否则文档内容里是「学院举办AI讲座」，
+  // 文件名却是「学院 举办 AI 讲座」，同一份东西两个样子
+  const docTitle = safeName(formatArticleText(title), '推文');
   const files = {};
 
   const docxBlob = await buildDocxBlob(title, content);
