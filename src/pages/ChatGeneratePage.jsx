@@ -470,6 +470,7 @@ export default function ChatGeneratePage() {
             content={currentArticle}
             onTitleChange={setCurrentTitle}
             onContentChange={setCurrentArticle}
+            selectedImages={selectedImages}
           />
         )}
         {/* Pipeline 状态面板（画布底部） */}

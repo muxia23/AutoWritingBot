@@ -3,8 +3,8 @@
  * 支持标题编辑、内容预览/编辑模式切换、内联批注功能
  */
 
-import { useState, useRef, useCallback } from 'react';
-import { Edit3, Eye, Copy, Download, Play, MessageSquarePlus } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Edit3, Eye, Copy, Download, Play, MessageSquarePlus, ChevronDown, FileText, Package } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Button from '../form/Button.jsx';
@@ -16,9 +16,10 @@ import { useAnnotation } from '../../hooks/useAnnotation.js';
 import { DeepSeekAPI } from '../../services/deepseek.js';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../utils/constants.js';
 import { downloadAsDocx } from '../../utils/exportDocx.js';
+import { downloadBundle } from '../../utils/exportBundle.js';
 import { formatArticleText } from '../../utils/formatText.js';
 
-export default function CanvasEditor({ title, content, onTitleChange, onContentChange }) {
+export default function CanvasEditor({ title, content, onTitleChange, onContentChange, selectedImages = [] }) {
   const { activeModel, showToast } = useApp();
   const { getStepPrompt } = usePromptContext();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -27,6 +28,9 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
   const [bubblePosition, setBubblePosition] = useState(null);
   const [bubbleSelectedText, setBubbleSelectedText] = useState('');
   const contentRef = useRef(null);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [isBundling, setIsBundling] = useState(false);
+  const downloadMenuRef = useRef(null);
 
   const {
     addAnnotation,
@@ -34,6 +38,15 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
     clearAllAnnotations,
     getPendingAnnotations
   } = useAnnotation();
+
+  useEffect(() => {
+    if (!showDownloadMenu) return;
+    const close = (e) => {
+      if (!downloadMenuRef.current?.contains(e.target)) setShowDownloadMenu(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [showDownloadMenu]);
 
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
@@ -116,11 +129,29 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
   };
 
   const handleDownload = async () => {
+    setShowDownloadMenu(false);
     try {
       await downloadAsDocx(title, content);
       showToast(SUCCESS_MESSAGES.DOWNLOADED);
     } catch (error) {
       showToast('导出失败：' + error.message, 'error');
+    }
+  };
+
+  const handleDownloadBundle = async () => {
+    setShowDownloadMenu(false);
+    setIsBundling(true);
+    try {
+      const { missing } = await downloadBundle(title, content, selectedImages);
+      if (missing > 0) {
+        showToast(`${missing} 张图片数据缺失，已跳过`, 'error');
+      } else {
+        showToast(SUCCESS_MESSAGES.DOWNLOADED);
+      }
+    } catch (error) {
+      showToast('打包失败：' + error.message, 'error');
+    } finally {
+      setIsBundling(false);
     }
   };
 
@@ -184,10 +215,41 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
             <Copy size={14} />
             复制
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download size={14} />
-            下载
-          </Button>
+          <div className="download-menu-wrap" ref={downloadMenuRef}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDownloadMenu(v => !v)}
+              loading={isBundling}
+              aria-haspopup="menu"
+              aria-expanded={showDownloadMenu}
+            >
+              <Download size={14} />
+              下载
+              <ChevronDown size={12} />
+            </Button>
+            {showDownloadMenu && (
+              <div className="download-menu" role="menu">
+                <button className="download-menu-item" role="menuitem" onClick={handleDownload}>
+                  <FileText size={14} />
+                  <span className="download-menu-label">下载 Word</span>
+                </button>
+                <button
+                  className="download-menu-item"
+                  role="menuitem"
+                  onClick={handleDownloadBundle}
+                  disabled={selectedImages.length === 0}
+                  title={selectedImages.length === 0 ? '本次未选择图片' : ''}
+                >
+                  <Package size={14} />
+                  <span className="download-menu-label">下载压缩包</span>
+                  <span className="download-menu-hint">
+                    {selectedImages.length === 0 ? '未选图片' : `${selectedImages.length} 张图`}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

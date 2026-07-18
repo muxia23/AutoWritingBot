@@ -1657,6 +1657,57 @@ body::before {
   font-family: var(--font-mono);
 }
 
+/* 画布工具栏 · 下载下拉 */
+.download-menu-wrap {
+  position: relative;
+}
+
+.download-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 190px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.download-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  transition: background var(--transition-fast);
+}
+
+.download-menu-item:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+.download-menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.download-menu-label {
+  flex: 1;
+}
+
+.download-menu-hint {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
 /* ========================================
    模型管理弹窗
    ======================================== */
