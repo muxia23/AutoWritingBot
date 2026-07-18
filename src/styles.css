@@ -3589,3 +3589,9 @@ body::before {
 .activity-type-input::placeholder {
   color: var(--text-tertiary);
 }
+
+/* 图片缩略图加载占位 */
+.image-thumb-placeholder {
+  background: #f0f0f0;
+  display: block;
+}
