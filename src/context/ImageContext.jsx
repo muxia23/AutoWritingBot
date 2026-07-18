@@ -1,22 +1,29 @@
 /**
  * 图片库全局状态管理
+ *
+ * 存储分层：二进制存 IndexedDB（见 services/imageStore.js），
+ * 元数据存 localStorage。避免图片撑爆 localStorage 5MB 配额。
  */
 
-import { createContext, useContext, useCallback } from 'react';
+import { createContext, useContext, useCallback, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage.js';
 import { DeepSeekAPI } from '../services/deepseek.js';
+import { getImageBlob, setImageBlob, delImageBlob, clearImageBlobs } from '../services/imageStore.js';
+import { blobToBase64, canvasToBlob } from '../utils/blobUtils.js';
+import { hasLegacyImages } from '../utils/imageMigration.js';
 import { STORAGE_KEYS } from '../utils/constants.js';
+import { useApp } from './AppContext.jsx';
 
 const ImageContext = createContext(null);
 
 /**
- * 压缩图片：最大边 1024px，转 base64
+ * 压缩图片：最大边 1024px，返回 Blob
  */
 function compressImage(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
+    img.onload = async () => {
       URL.revokeObjectURL(objectUrl);
       const maxSide = 1024;
       let { width, height } = img;
@@ -35,23 +42,54 @@ function compressImage(file) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
       const mimeType = file.type || 'image/jpeg';
-      const base64 = canvas.toDataURL(mimeType, 0.82).split(',')[1];
-      resolve({ base64, mimeType });
+      try {
+        const blob = await canvasToBlob(canvas, mimeType, 0.82);
+        resolve({ blob, mimeType });
+      } catch (error) {
+        reject(error);
+      }
     };
-    img.onerror = reject;
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('图片解码失败'));
+    };
     img.src = objectUrl;
   });
 }
 
 export function ImageProvider({ children }) {
-  const [images, setImages] = useLocalStorage(STORAGE_KEYS.IMAGE_LIBRARY, []);
+  const { showToast } = useApp();
+
+  const handleStorageError = useCallback((error) => {
+    if (error?.name === 'QuotaExceededError') {
+      showToast('本地存储空间已满，请到图片库删除部分图片', 'error');
+    } else {
+      showToast('本地存储写入失败', 'error');
+    }
+  }, [showToast]);
+
+  const [images, setImages] = useLocalStorage(STORAGE_KEYS.IMAGE_LIBRARY, [], handleStorageError);
+
+  // 检测到旧格式（base64 存在 localStorage）时清空重来。
+  // 用户已确认旧图片不迁移、重新上传。
+  const migrationChecked = useRef(false);
+  useEffect(() => {
+    if (migrationChecked.current) return;
+    migrationChecked.current = true;
+    if (hasLegacyImages(images)) {
+      setImages([]);
+      clearImageBlobs().catch(() => {});
+      showToast('图片存储已升级，请重新上传图片', 'info');
+    }
+  }, [images, setImages, showToast]);
 
   const addImage = useCallback(async (file) => {
-    const { base64, mimeType } = await compressImage(file);
+    const { blob, mimeType } = await compressImage(file);
+    const id = `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await setImageBlob(id, blob);
     const entry = {
-      id: `img-${Date.now()}`,
+      id,
       name: file.name,
-      base64,
       mimeType,
       description: '',
       createdAt: new Date().toISOString().split('T')[0]
@@ -70,12 +108,16 @@ export function ImageProvider({ children }) {
 
   const removeImage = useCallback((id) => {
     setImages(prev => prev.filter(img => img.id !== id));
+    delImageBlob(id).catch(() => {});
   }, [setImages]);
 
   const analyzeImage = useCallback(async (id, modelConfig) => {
     const img = images.find(i => i.id === id);
     if (!img) return;
-    const description = await DeepSeekAPI.analyzeImage(img.base64, img.mimeType, modelConfig);
+    const blob = await getImageBlob(id);
+    if (!blob) throw new Error('图片数据缺失，请重新上传');
+    const base64 = await blobToBase64(blob);
+    const description = await DeepSeekAPI.analyzeImage(base64, img.mimeType, modelConfig);
     setImages(prev => prev.map(i => i.id === id ? { ...i, description } : i));
     return description;
   }, [images, setImages]);
