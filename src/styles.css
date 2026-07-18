@@ -3589,3 +3589,36 @@ body::before {
 .activity-type-input::placeholder {
   color: var(--text-tertiary);
 }
+
+/* 图片缩略图加载占位 */
+.image-thumb-placeholder {
+  background: #f0f0f0;
+  display: block;
+}
+
+/* 历史记录弹窗 */
+.history-modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Pipeline 折叠头 */
+.pipeline-collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: #666;
+  border-bottom: 1px solid #eee;
+}
+
+.pipeline-collapse-header:hover {
+  background: #fafafa;
+}
+
+.pipeline-collapse-summary {
+  font-weight: 500;
+}

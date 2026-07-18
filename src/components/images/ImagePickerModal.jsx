@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Modal from '../layout/Modal.jsx';
 import Button from '../form/Button.jsx';
+import ImageThumb from './ImageThumb.jsx';
 import { useImageContext } from '../../context/ImageContext.jsx';
 import { ROUTES } from '../../utils/constants.js';
 
@@ -54,8 +55,8 @@ export default function ImagePickerModal({ selectedIds, onConfirm, onClose }) {
                   className={`image-picker-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => toggleSelect(img.id)}
                 >
-                  <img
-                    src={`data:${img.mimeType};base64,${img.base64}`}
+                  <ImageThumb
+                    id={img.id}
                     alt={img.name}
                     className="image-picker-thumb"
                   />

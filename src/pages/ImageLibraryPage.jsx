@@ -8,6 +8,7 @@ import { useImageContext } from '../context/ImageContext.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import Button from '../components/form/Button.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
+import ImageThumb from '../components/images/ImageThumb.jsx';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../utils/constants.js';
 
 export default function ImageLibraryPage() {
@@ -135,8 +136,8 @@ export default function ImageLibraryPage() {
           {images.map(img => (
             <div key={img.id} className="image-card">
               <div className="image-card-thumb">
-                <img
-                  src={`data:${img.mimeType};base64,${img.base64}`}
+                <ImageThumb
+                  id={img.id}
                   alt={img.name}
                   className="image-thumb"
                 />

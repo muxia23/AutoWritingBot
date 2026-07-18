@@ -3,7 +3,7 @@
  * 显示4个生成步骤的进度、输出和耗时
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, Circle, Loader, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 function formatDuration(ms) {
@@ -11,8 +11,17 @@ function formatDuration(ms) {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
 }
 
-export default function PipelinePanel({ steps, isRunning, currentStepId }) {
+export default function PipelinePanel({ steps, isRunning, currentStepId, isDone }) {
   const [expandedStep, setExpandedStep] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // 运行中强制展开；完成时自动折叠为摘要
+  useEffect(() => {
+    if (isRunning) setCollapsed(false);
+    else if (isDone) setCollapsed(true);
+  }, [isRunning, isDone]);
+
+  const doneCount = steps.filter(s => s.status === 'done').length;
 
   const getIcon = (status) => {
     switch (status) {
@@ -25,6 +34,17 @@ export default function PipelinePanel({ steps, isRunning, currentStepId }) {
 
   return (
     <div className="pipeline-panel">
+      <div
+        className="pipeline-collapse-header"
+        onClick={() => setCollapsed(v => !v)}
+      >
+        <span className="pipeline-collapse-summary">
+          {collapsed ? `✓ 已完成 ${doneCount} 步 · 点击展开` : '生成步骤'}
+        </span>
+        {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+      </div>
+      {!collapsed && (
+        <>
       {steps.map((step) => {
         const isCurrent = step.id === currentStepId;
         const hasOutput = step.output?.trim();
@@ -77,6 +97,8 @@ export default function PipelinePanel({ steps, isRunning, currentStepId }) {
           <p>填写活动信息后点击「开始生成」</p>
           <p>AI 将自动完成 4 个步骤生成推文</p>
         </div>
+      )}
+        </>
       )}
     </div>
   );

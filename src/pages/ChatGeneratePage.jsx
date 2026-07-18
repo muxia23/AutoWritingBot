@@ -3,22 +3,27 @@
  * 左侧：配置 + Pipeline状态（30%）| 右侧：Canvas编辑器（70%）
  */
 
-import { useState, useRef } from 'react';
-import { Send, RotateCcw, Plus, X, GripVertical, ChevronDown, ChevronUp, ImageIcon, FileSearch, Square } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, RotateCcw, Plus, X, GripVertical, ChevronDown, ChevronUp, ImageIcon, FileSearch, Square, History } from 'lucide-react';
 import CanvasEditor from '../components/canvas/CanvasEditor.jsx';
 import Button from '../components/form/Button.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ImagePickerModal from '../components/images/ImagePickerModal.jsx';
 import ArticleRefModal from '../components/chat/ArticleRefModal.jsx';
 import PipelinePanel from '../components/pipeline/PipelinePanel.jsx';
+import ConversationHistory from '../components/conversation/ConversationHistory.jsx';
+import Modal from '../components/layout/Modal.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { usePromptContext } from '../context/PromptContext.jsx';
+import { useImageContext } from '../context/ImageContext.jsx';
 import { useConversation } from '../hooks/useConversation.js';
 import { usePipeline } from '../hooks/usePipeline.js';
+import { useConversationHistory } from '../hooks/useConversationHistory.js';
 import { FIXED_PERSONS, ACTIVITY_TYPES, ERROR_MESSAGES } from '../utils/constants.js';
 
 export default function ChatGeneratePage() {
   const { activeModel, modelConfigs, activeModelId, setActiveModelId, showToast } = useApp();
+  const { images } = useImageContext();
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const { buildSystemPrompt } = usePromptContext();
   const {
@@ -53,6 +58,58 @@ export default function ChatGeneratePage() {
     setCurrentTitle,
     showToast,
   });
+
+  const handleHistoryError = useCallback(() => {
+    showToast('对话历史保存失败，本地存储空间可能已满', 'error');
+  }, [showToast]);
+
+  const { addConversation, deleteConversation } = useConversationHistory(handleHistoryError);
+
+  // pipeline 完成时自动存一条历史。用 ref 防止 isDone 保持 true 期间重复写入。
+  const savedForRunRef = useRef(false);
+
+  useEffect(() => {
+    if (isRunning) {
+      savedForRunRef.current = false;
+      return;
+    }
+    if (!isDone || savedForRunRef.current || !currentArticle) return;
+    savedForRunRef.current = true;
+    addConversation({
+      type: 'chat',
+      title: currentTitle || '未命名推文',
+      output: currentArticle,
+      input: {
+        userInput,
+        activityType: selectedActivityType,
+        persons: orderedPersons,
+        imageIds: selectedImages.map(i => i.id),
+        articleRefs,
+      },
+    });
+  }, [isDone, isRunning, currentArticle, currentTitle, userInput, selectedActivityType,
+      orderedPersons, selectedImages, articleRefs, addConversation]);
+
+  const [showHistory, setShowHistory] = useState(false);
+
+  const handleSelectConversation = (conv) => {
+    if (!conv) return;
+    if (currentArticle && !confirm('恢复历史记录会覆盖当前画布内容，确定继续吗？')) return;
+
+    setCurrentArticle(conv.output || '');
+    setCurrentTitle(conv.title || '');
+    setSelectedActivityType(conv.input?.activityType || '');
+    setOrderedPersons(conv.input?.persons || []);
+    setUserInput(conv.input?.userInput || '');
+    setArticleRefs(conv.input?.articleRefs || []);
+
+    const ids = conv.input?.imageIds || [];
+    setSelectedImages(images.filter(img => ids.includes(img.id)));
+
+    resetSteps();
+    savedForRunRef.current = true;  // 恢复出来的内容不应再被存成新记录
+    setShowHistory(false);
+  };
 
   // ── 领导管理 ──────────────────────────────────────
 
@@ -153,6 +210,10 @@ export default function ChatGeneratePage() {
         <div className="chat-sidebar-header">
           <h3 className="sidebar-title">推文生成</h3>
           <div className="sidebar-actions">
+            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)}>
+              <History size={14} />
+              历史
+            </Button>
             <Button variant="outline" size="sm" onClick={handleClear}>
               <RotateCcw size={14} />
               清空
@@ -293,7 +354,7 @@ export default function ChatGeneratePage() {
                     }}
                     placeholder="如：副书记李明"
                     autoFocus
-                    maxLength={20}
+                    maxLength={30}
                   />
                   <button className="quick-option-btn active" onClick={handleAddCustomPerson}>确定</button>
                   <button className="quick-option-btn" onClick={() => { setShowPersonInput(false); setCustomPersonInput(''); }}>✕</button>
@@ -384,6 +445,16 @@ export default function ChatGeneratePage() {
             onClose={() => setShowArticleRefModal(false)}
           />
         )}
+        {showHistory && (
+          <Modal onClose={() => setShowHistory(false)} title="对话历史">
+            <div className="history-modal-body">
+              <ConversationHistory
+                onSelectConversation={handleSelectConversation}
+                onDeleteConversation={deleteConversation}
+              />
+            </div>
+          </Modal>
+        )}
       </div>
 
       {/* 右侧画布（70%） */}
@@ -406,7 +477,7 @@ export default function ChatGeneratePage() {
         {/* Pipeline 状态面板（画布底部） */}
         {steps.some(s => s.status !== 'pending') && (
           <div className="canvas-pipeline-bar">
-            <PipelinePanel steps={steps} isRunning={isRunning} currentStepId={currentStepId} />
+            <PipelinePanel steps={steps} isRunning={isRunning} currentStepId={currentStepId} isDone={isDone} />
           </div>
         )}
       </div>
