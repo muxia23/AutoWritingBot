@@ -15,3 +15,14 @@ export const MAX_HISTORY = 30;
 export function appendConversation(history, conversation) {
   return [conversation, ...history].slice(0, MAX_HISTORY);
 }
+
+/**
+ * 合并导入的对话并裁剪到上限
+ * 导入一个大备份同样会撞配额，必须和 appendConversation 走同一个上限。
+ * @param {Array} history
+ * @param {Array} imported
+ * @returns {Array}
+ */
+export function mergeImportedConversations(history, imported) {
+  return [...imported, ...history].slice(0, MAX_HISTORY);
+}

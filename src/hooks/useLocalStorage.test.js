@@ -51,6 +51,29 @@ describe('useLocalStorage', () => {
     expect(JSON.parse(localStorage.getItem('k'))).toEqual(['a', 'b', 'c']);
   });
 
+  // 回归测试：同一个 key 会被多个组件各自调用（如 ChatGeneratePage 与弹窗内的
+  // ConversationHistory）。若实例间不同步，弹窗里「清空历史」后，页面那份陈旧
+  // 实例会在下次写入时把已删数据重新写回，用户的删除被静默撤销。
+  it('同一 key 的多个实例保持同步', () => {
+    const a = renderHook(() => useLocalStorage('shared', ['x']));
+    const b = renderHook(() => useLocalStorage('shared', ['x']));
+
+    act(() => b.result.current[1]([]));           // 实例 B 清空
+    expect(b.result.current[0]).toEqual([]);
+    expect(a.result.current[0]).toEqual([]);      // 实例 A 必须同步感知
+
+    act(() => a.result.current[1](prev => [...prev, 'new']));
+    expect(JSON.parse(localStorage.getItem('shared'))).toEqual(['new']);  // 不能复活 'x'
+  });
+
+  it('实例卸载后不再接收更新', () => {
+    const a = renderHook(() => useLocalStorage('shared2', []));
+    const b = renderHook(() => useLocalStorage('shared2', []));
+    a.unmount();
+    expect(() => act(() => b.result.current[1](['ok']))).not.toThrow();
+    expect(JSON.parse(localStorage.getItem('shared2'))).toEqual(['ok']);
+  });
+
   it('连续函数式更新后 localStorage 与 state 一致', () => {
     const { result } = renderHook(() => useLocalStorage('k', []));
     act(() => {

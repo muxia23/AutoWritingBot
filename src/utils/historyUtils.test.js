@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { appendConversation, MAX_HISTORY } from './historyUtils.js';
+import { appendConversation, mergeImportedConversations, MAX_HISTORY } from './historyUtils.js';
 
 const conv = (id) => ({ id, title: `t-${id}` });
 
@@ -25,5 +25,20 @@ describe('appendConversation', () => {
 
   it('上限为 30', () => {
     expect(MAX_HISTORY).toBe(30);
+  });
+});
+
+describe('mergeImportedConversations', () => {
+  it('导入的记录排在已有记录之前', () => {
+    const result = mergeImportedConversations([{ id: 'old' }], [{ id: 'imp' }]);
+    expect(result.map(c => c.id)).toEqual(['imp', 'old']);
+  });
+
+  // 回归测试：导入一个大备份曾绕过上限，直接重现配额撑爆问题
+  it('导入超量记录时裁剪到上限', () => {
+    const imported = Array.from({ length: 500 }, (_, i) => ({ id: `imp-${i}` }));
+    const result = mergeImportedConversations([{ id: 'old' }], imported);
+    expect(result).toHaveLength(MAX_HISTORY);
+    expect(result[0].id).toBe('imp-0');
   });
 });

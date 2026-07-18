@@ -5,7 +5,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage.js';
 import { STORAGE_KEYS, FILE_TEMPLATES } from '../utils/constants.js';
-import { appendConversation } from '../utils/historyUtils.js';
+import { appendConversation, mergeImportedConversations } from '../utils/historyUtils.js';
 
 // 生成对话 ID
 const generateConversationId = () => `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -82,11 +82,11 @@ export function useConversationHistory(onError) {
           const importedData = JSON.parse(e.target.result);
           if (Array.isArray(importedData)) {
             // 导入多个对话
-            setHistory(prev => [...importedData, ...prev]);
+            setHistory(prev => mergeImportedConversations(prev, importedData));
             resolve(importedData);
           } else if (typeof importedData === 'object' && importedData.id) {
             // 导入单个对话
-            setHistory(prev => [importedData, ...prev]);
+            setHistory(prev => mergeImportedConversations(prev, [importedData]));
             resolve([importedData]);
           } else {
             reject(new Error('无效的文件格式'));

@@ -62,7 +62,9 @@ export function ImageProvider({ children }) {
 
   const handleStorageError = useCallback((error) => {
     if (error?.name === 'QuotaExceededError') {
-      showToast('本地存储空间已满，请到图片库删除部分图片', 'error');
+      // 图片二进制已在 IndexedDB，元数据仅几百字节，删图片腾不出空间。
+      // 现在 localStorage 的主要占用方是对话历史。
+      showToast('本地存储空间已满，请到「历史」中清理对话记录', 'error');
     } else {
       showToast('本地存储写入失败', 'error');
     }

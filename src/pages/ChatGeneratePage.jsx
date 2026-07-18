@@ -63,7 +63,7 @@ export default function ChatGeneratePage() {
     showToast('对话历史保存失败，本地存储空间可能已满', 'error');
   }, [showToast]);
 
-  const { addConversation } = useConversationHistory(handleHistoryError);
+  const { addConversation, deleteConversation } = useConversationHistory(handleHistoryError);
 
   // pipeline 完成时自动存一条历史。用 ref 防止 isDone 保持 true 期间重复写入。
   const savedForRunRef = useRef(false);
@@ -450,6 +450,7 @@ export default function ChatGeneratePage() {
             <div className="history-modal-body">
               <ConversationHistory
                 onSelectConversation={handleSelectConversation}
+                onDeleteConversation={deleteConversation}
               />
             </div>
           </Modal>
