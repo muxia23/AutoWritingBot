@@ -33,7 +33,31 @@ function normalizeQuotes(text) {
   return out;
 }
 
+// 基本汉字、扩展 A 区、中文标点、全角字符
+const CJK = '\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffef';
+
+// 用前瞻而非捕获第二个字符：若消费掉它，"中 文 中" 里的 "文 中"
+// 在同一趟全局替换中就不会再匹配
+const CJK_BEFORE = new RegExp(`([${CJK}])[ \\t]+(?=[${CJK}A-Za-z0-9])`, 'g');
+const CJK_AFTER = new RegExp(`([A-Za-z0-9])[ \\t]+(?=[${CJK}])`, 'g');
+
+function stripCjkSpaces(text) {
+  // 用 [ \t] 而非 \s，避免吞掉换行
+  return text.replace(CJK_BEFORE, '$1').replace(CJK_AFTER, '$1');
+}
+
+// 行首 Markdown 标记：标题、无序列表、有序列表、引用
+const LINE_PREFIX = /^\s*(#{1,6}|[-*+]|\d+\.|>)\s+/;
+
+function formatLine(line) {
+  const match = line.match(LINE_PREFIX);
+  const prefix = match ? `${match[1]} ` : '';
+  const body = match ? line.slice(match[0].length) : line;
+  const formatted = stripCjkSpaces(normalizeQuotes(body)).trim();
+  return formatted ? prefix + formatted : formatted;
+}
+
 export function formatArticleText(text) {
   if (!text) return '';
-  return text.split('\n').map(normalizeQuotes).join('\n');
+  return text.split('\n').map(formatLine).join('\n');
 }
