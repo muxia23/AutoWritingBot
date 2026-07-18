@@ -20,17 +20,20 @@ export function useLocalStorage(key, initialValue = '', onError) {
     }
   });
 
+  // 必须走 React 的函数式更新拿 prev，不能读闭包捕获的 storedValue：
+  // 调用方（如图片库批量上传）会在一次渲染内连续调用，读闭包会让后一次覆盖前一次。
   const setValue = useCallback((value) => {
-    const valueToStore = value instanceof Function ? value(storedValue) : value;
-    try {
-      localStorage.setItem(key, JSON.stringify(valueToStore));
-      setStoredValue(valueToStore);
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
-      setStoredValue(valueToStore);
-      if (onError) onError(error);
-    }
-  }, [key, storedValue, onError]);
+    setStoredValue(prev => {
+      const valueToStore = value instanceof Function ? value(prev) : value;
+      try {
+        localStorage.setItem(key, JSON.stringify(valueToStore));
+      } catch (error) {
+        console.error(`Error setting localStorage key "${key}":`, error);
+        if (onError) onError(error);
+      }
+      return valueToStore;
+    });
+  }, [key, onError]);
 
   const removeValue = useCallback(() => {
     try {
