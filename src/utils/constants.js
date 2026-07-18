@@ -8,6 +8,8 @@ export const FIXED_PERSONS = [
   { id: 'wengsuiping', name: '党委书记翁穗平', gender: 'female' },
   { id: 'wangtao', name: '党委副书记王涛', gender: 'female' },
   { id: 'huangcaijin', name: '副院长黄彩进', gender: 'male' },
+  { id: 'liuxinyi', name: '院团委书记刘歆一', gender: 'female' },
+  { id: 'yangyang', name: '辅导员杨洋', gender: 'male' },
   { id: 'counselor', name: '辅导员', gender: '', canCustom: true }
 ];
 

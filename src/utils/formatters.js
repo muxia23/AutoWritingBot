@@ -130,3 +130,30 @@ export const Formatters = {
     return typeMap[type] || type;
   }
 };
+
+/**
+ * 去掉人名前的职务前缀，用于紧凑的按钮/摘要展示。
+ * 按长度降序匹配，避免「党委副书记」被「党委书记」之外的短前缀误伤。
+ * @param {string} fullName 如「常务副院长方捷」
+ * @returns {string} 如「方捷」
+ */
+const PERSON_TITLES = [
+  '常务副院长',
+  '党委副书记',
+  '院团委书记',
+  '党委书记',
+  '副院长',
+  '辅导员',
+];
+
+export function stripPersonTitle(fullName) {
+  if (!fullName) return '';
+  for (const title of PERSON_TITLES) {
+    if (fullName.startsWith(title)) {
+      const rest = fullName.slice(title.length);
+      // 「辅导员」这类无具体姓名的泛称，去掉后为空，保留原文
+      return rest || fullName;
+    }
+  }
+  return fullName;
+}

@@ -20,6 +20,7 @@ import { useConversation } from '../hooks/useConversation.js';
 import { usePipeline } from '../hooks/usePipeline.js';
 import { useConversationHistory } from '../hooks/useConversationHistory.js';
 import { FIXED_PERSONS, ACTIVITY_TYPES, ERROR_MESSAGES } from '../utils/constants.js';
+import { stripPersonTitle } from '../utils/formatters.js';
 
 export default function ChatGeneratePage() {
   const { activeModel, modelConfigs, activeModelId, setActiveModelId, showToast } = useApp();
@@ -299,7 +300,7 @@ export default function ChatGeneratePage() {
               <span className="persons-order-hint">拖动可调整顺序</span>
             )}
             {orderedPersons.length > 0 && !personsExpanded && (
-              <span className="collapsed-summary">{orderedPersons.map(p => p.name.replace('常务副院长', '').replace('党委书记', '').replace('党委副书记', '').replace('副院长', '')).join('、')}</span>
+              <span className="collapsed-summary">{orderedPersons.map(p => stripPersonTitle(p.name)).join('、')}</span>
             )}
             <span className="collapse-toggle">{personsExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</span>
           </div>
@@ -314,7 +315,7 @@ export default function ChatGeneratePage() {
                       className={`quick-option-btn ${isSelected ? 'active' : ''}`}
                       onClick={() => handlePersonToggle(person)}
                     >
-                      {person.name.replace('常务副院长', '').replace('党委书记', '').replace('党委副书记', '').replace('副院长', '')}
+                      {stripPersonTitle(person.name)}
                     </button>
                   );
                 })}
