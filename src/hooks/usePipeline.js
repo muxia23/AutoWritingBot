@@ -6,6 +6,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { DeepSeekAPI } from '../services/deepseek.js';
 import { parseArticle } from '../utils/parseArticle.js';
+import { formatArticleText } from '../utils/formatText.js';
 
 const PIPELINE_STEPS = [
   { id: 'organize', name: '整理素材', description: '分析活动信息和参考资料' },
@@ -111,8 +112,8 @@ export function usePipeline({ buildSystemPrompt, getStepPrompt, activeModel, set
       );
       history.push({ role: 'assistant', content: step2Out });
       const { title: draftTitle, content: draftContent } = parseArticle(step2Out);
-      if (draftTitle) setCurrentTitle(draftTitle);
-      setCurrentArticle(draftContent || step2Out);
+      if (draftTitle) setCurrentTitle(formatArticleText(draftTitle));
+      setCurrentArticle(formatArticleText(draftContent || step2Out));
       updateStep('draft', { status: 'done', output: step2Out, duration: Date.now() - t2 });
 
       // ── Step 3: 质量评估 ──────────────────────────
@@ -159,8 +160,8 @@ export function usePipeline({ buildSystemPrompt, getStepPrompt, activeModel, set
       );
       history.push({ role: 'assistant', content: step4Out });
       const { title: finalTitle, content: finalContent } = parseArticle(step4Out);
-      if (finalTitle) setCurrentTitle(finalTitle);
-      setCurrentArticle(finalContent || step4Out);
+      if (finalTitle) setCurrentTitle(formatArticleText(finalTitle));
+      setCurrentArticle(formatArticleText(finalContent || step4Out));
       updateStep('refine', { status: 'done', output: step4Out, duration: Date.now() - t4 });
 
       setIsDone(true);

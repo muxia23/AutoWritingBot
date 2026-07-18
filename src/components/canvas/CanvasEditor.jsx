@@ -16,6 +16,7 @@ import { useAnnotation } from '../../hooks/useAnnotation.js';
 import { DeepSeekAPI } from '../../services/deepseek.js';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '../../utils/constants.js';
 import { downloadAsDocx } from '../../utils/exportDocx.js';
+import { formatArticleText } from '../../utils/formatText.js';
 
 export default function CanvasEditor({ title, content, onTitleChange, onContentChange }) {
   const { activeModel, showToast } = useApp();
@@ -79,7 +80,7 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
       // 批注应用用独立的编辑提示词：主提示词的「四段结构 + # 标题开头」
       // 要求会让局部修改重排全文、把标题行混进正文
       const result = await DeepSeekAPI.applyInlineAnnotation(getStepPrompt('annotation'), content, annotation, activeModel);
-      onContentChange(result);
+      onContentChange(formatArticleText(result));
       deleteAnnotation(annotation.id);
       showToast(SUCCESS_MESSAGES.ARTICLE_OPTIMIZED);
     } catch (error) {
@@ -99,7 +100,7 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
     setIsApplying(true);
     try {
       const result = await DeepSeekAPI.applyAnnotations(getStepPrompt('annotation'), content, pending, activeModel);
-      onContentChange(result);
+      onContentChange(formatArticleText(result));
       clearAllAnnotations();
       showToast(SUCCESS_MESSAGES.ARTICLE_OPTIMIZED);
     } catch (error) {
