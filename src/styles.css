@@ -3595,3 +3595,9 @@ body::before {
   background: #f0f0f0;
   display: block;
 }
+
+/* 历史记录弹窗 */
+.history-modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}

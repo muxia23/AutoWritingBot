@@ -4,15 +4,18 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, RotateCcw, Plus, X, GripVertical, ChevronDown, ChevronUp, ImageIcon, FileSearch, Square } from 'lucide-react';
+import { Send, RotateCcw, Plus, X, GripVertical, ChevronDown, ChevronUp, ImageIcon, FileSearch, Square, History } from 'lucide-react';
 import CanvasEditor from '../components/canvas/CanvasEditor.jsx';
 import Button from '../components/form/Button.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ImagePickerModal from '../components/images/ImagePickerModal.jsx';
 import ArticleRefModal from '../components/chat/ArticleRefModal.jsx';
 import PipelinePanel from '../components/pipeline/PipelinePanel.jsx';
+import ConversationHistory from '../components/conversation/ConversationHistory.jsx';
+import Modal from '../components/layout/Modal.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { usePromptContext } from '../context/PromptContext.jsx';
+import { useImageContext } from '../context/ImageContext.jsx';
 import { useConversation } from '../hooks/useConversation.js';
 import { usePipeline } from '../hooks/usePipeline.js';
 import { useConversationHistory } from '../hooks/useConversationHistory.js';
@@ -20,6 +23,7 @@ import { FIXED_PERSONS, ACTIVITY_TYPES, ERROR_MESSAGES } from '../utils/constant
 
 export default function ChatGeneratePage() {
   const { activeModel, modelConfigs, activeModelId, setActiveModelId, showToast } = useApp();
+  const { images } = useImageContext();
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const { buildSystemPrompt } = usePromptContext();
   const {
@@ -85,6 +89,27 @@ export default function ChatGeneratePage() {
     });
   }, [isDone, isRunning, currentArticle, currentTitle, userInput, selectedActivityType,
       orderedPersons, selectedImages, articleRefs, addConversation]);
+
+  const [showHistory, setShowHistory] = useState(false);
+
+  const handleSelectConversation = (conv) => {
+    if (!conv) return;
+    if (currentArticle && !confirm('恢复历史记录会覆盖当前画布内容，确定继续吗？')) return;
+
+    setCurrentArticle(conv.output || '');
+    setCurrentTitle(conv.title || '');
+    setSelectedActivityType(conv.input?.activityType || '');
+    setOrderedPersons(conv.input?.persons || []);
+    setUserInput(conv.input?.userInput || '');
+    setArticleRefs(conv.input?.articleRefs || []);
+
+    const ids = conv.input?.imageIds || [];
+    setSelectedImages(images.filter(img => ids.includes(img.id)));
+
+    resetSteps();
+    savedForRunRef.current = true;  // 恢复出来的内容不应再被存成新记录
+    setShowHistory(false);
+  };
 
   // ── 领导管理 ──────────────────────────────────────
 
@@ -185,6 +210,10 @@ export default function ChatGeneratePage() {
         <div className="chat-sidebar-header">
           <h3 className="sidebar-title">推文生成</h3>
           <div className="sidebar-actions">
+            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)}>
+              <History size={14} />
+              历史
+            </Button>
             <Button variant="outline" size="sm" onClick={handleClear}>
               <RotateCcw size={14} />
               清空
@@ -415,6 +444,15 @@ export default function ChatGeneratePage() {
             onConfirm={(ref) => setArticleRefs(prev => [...prev, ref])}
             onClose={() => setShowArticleRefModal(false)}
           />
+        )}
+        {showHistory && (
+          <Modal onClose={() => setShowHistory(false)} title="对话历史">
+            <div className="history-modal-body">
+              <ConversationHistory
+                onSelectConversation={handleSelectConversation}
+              />
+            </div>
+          </Modal>
         )}
       </div>
 
