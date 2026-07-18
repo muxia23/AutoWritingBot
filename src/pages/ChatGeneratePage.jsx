@@ -354,7 +354,7 @@ export default function ChatGeneratePage() {
                     }}
                     placeholder="如：副书记李明"
                     autoFocus
-                    maxLength={20}
+                    maxLength={30}
                   />
                   <button className="quick-option-btn active" onClick={handleAddCustomPerson}>确定</button>
                   <button className="quick-option-btn" onClick={() => { setShowPersonInput(false); setCustomPersonInput(''); }}>✕</button>
