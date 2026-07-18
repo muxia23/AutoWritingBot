@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "docx": "^9.6.1",
+    "fflate": "^0.8.3",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
