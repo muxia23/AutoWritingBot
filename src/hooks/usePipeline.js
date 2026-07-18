@@ -5,6 +5,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { DeepSeekAPI } from '../services/deepseek.js';
+import { parseArticle } from '../utils/parseArticle.js';
 
 const PIPELINE_STEPS = [
   { id: 'organize', name: '整理素材', description: '分析活动信息和参考资料' },
@@ -18,19 +19,6 @@ const STEP_USER_MSGS = {
   evaluate: '请对上面的推文初稿进行质量评估，列出具体问题。',
   refine:   '请根据评估意见，对推文初稿进行修改和优化，输出完整的最终版本。',
 };
-
-function parseArticle(text) {
-  const lines = text.split('\n');
-  for (const line of lines) {
-    const match = line.match(/^#\s+\[(.+?)\]/) || line.match(/^#\s+(.+)/);
-    if (match) {
-      const title = match[1].trim();
-      const content = text.slice(text.indexOf(line) + line.length).trim();
-      return { title, content: content || text };
-    }
-  }
-  return { title: '', content: text };
-}
 
 export function usePipeline({ buildSystemPrompt, getStepPrompt, activeModel, setCurrentArticle, setCurrentTitle, showToast }) {
   const [steps, setSteps] = useState(

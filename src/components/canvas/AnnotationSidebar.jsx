@@ -11,7 +11,6 @@ import { ANNOTATION_TYPES } from '../../utils/constants.js';
 export default function AnnotationSidebar({
   annotations,
   onAdd,
-  onUpdate,
   onDelete,
   onApply,
   onApplyAll,

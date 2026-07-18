@@ -22,7 +22,9 @@ export const DeepSeekAPI = {
     const {
       apiKey,
       baseUrl = DEFAULTS.baseUrl,
-      model = DEFAULTS.model
+      model = DEFAULTS.model,
+      temperature = DEFAULTS.temperature,
+      maxTokens = DEFAULTS.maxTokens
     } = modelConfig || {};
 
     const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
@@ -30,8 +32,8 @@ export const DeepSeekAPI = {
     const body = {
       model,
       messages,
-      temperature: DEFAULTS.temperature,
-      max_tokens: DEFAULTS.maxTokens
+      temperature,
+      max_tokens: maxTokens
     };
 
     try {
@@ -51,17 +53,6 @@ export const DeepSeekAPI = {
   },
 
   /**
-   * 生成推文
-   */
-  async generateArticle(skillsPrompt, userPrompt, modelConfig) {
-    const messages = [
-      { role: 'system', content: skillsPrompt },
-      { role: 'user', content: userPrompt }
-    ];
-    return this.chat(messages, modelConfig);
-  },
-
-  /**
    * 流式多轮对话（推文生成专用）
    * @param {string} systemPrompt
    * @param {Array} messages - 纯对话历史（不含 system）
@@ -72,7 +63,9 @@ export const DeepSeekAPI = {
     const {
       apiKey,
       baseUrl = DEFAULTS.baseUrl,
-      model = DEFAULTS.model
+      model = DEFAULTS.model,
+      temperature = DEFAULTS.temperature,
+      maxTokens = DEFAULTS.maxTokens
     } = modelConfig || {};
 
     const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
@@ -84,25 +77,14 @@ export const DeepSeekAPI = {
     const body = {
       model,
       messages: fullMessages,
-      temperature: DEFAULTS.temperature,
-      max_tokens: DEFAULTS.maxTokens,
+      temperature,
+      max_tokens: maxTokens,
       stream: true
     };
 
     return ApiService.postStream(url, body, {
       'Authorization': `Bearer ${apiKey}`
     }, onChunk, signal);
-  },
-
-  /**
-   * 支持多轮对话历史的聊天
-   */
-  async chatWithHistory(systemPrompt, messages, modelConfig) {
-    const fullMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages
-    ];
-    return this.chat(fullMessages, modelConfig);
   },
 
   /**
@@ -132,11 +114,6 @@ export const DeepSeekAPI = {
   },
 
   /**
-   * 应用单个批注
-   * - fix/style：仅修正指定段落，其余不变
-   * - rewrite：修正后检查全文连贯性
-   */
-  /**
    * 分析图片内容（Vision API）
    * @param {string} base64 - 图片 base64 数据（不含 data:... 前缀）
    * @param {string} mimeType - 图片 MIME 类型（如 image/jpeg）
@@ -153,6 +130,11 @@ export const DeepSeekAPI = {
     return this.chat(messages, modelConfig);
   },
 
+  /**
+   * 应用单个批注
+   * - fix/style：仅修正指定段落，其余不变
+   * - rewrite：修正后检查全文连贯性
+   */
   async applyInlineAnnotation(systemPrompt, articleContent, annotation, modelConfig) {
     const typeMap = { rewrite: '重写', fix: '修正', style: '润色' };
     const typeLabel = typeMap[annotation.type] || annotation.type;

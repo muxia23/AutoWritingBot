@@ -5,6 +5,8 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { Edit3, Eye, Copy, Download, Play, MessageSquarePlus } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Button from '../form/Button.jsx';
 import InlineAnnotationBubble from './InlineAnnotationBubble.jsx';
 import AnnotationSidebar from './AnnotationSidebar.jsx';
@@ -26,7 +28,6 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
   const contentRef = useRef(null);
 
   const {
-    annotations,
     addAnnotation,
     deleteAnnotation,
     clearAllAnnotations,
@@ -195,31 +196,15 @@ export default function CanvasEditor({ title, content, onTitleChange, onContentC
         <div className="canvas-content" ref={contentRef}>
           {viewMode === 'preview' ? (
             <>
-              {viewMode === 'preview' && (
-                <div className="annotation-hint">
-                  <MessageSquarePlus size={12} />
-                  选中文字可添加批注
-                </div>
-              )}
+              <div className="annotation-hint">
+                <MessageSquarePlus size={12} />
+                选中文字可添加批注
+              </div>
               <div
                 className="markdown-preview"
                 onMouseUp={handleTextSelection}
               >
-                {content.split('\n').map((line, index) => {
-                  if (line.startsWith('# ')) {
-                    return <h1 key={index}>{line.slice(2)}</h1>;
-                  }
-                  if (line.startsWith('## ')) {
-                    return <h2 key={index}>{line.slice(3)}</h2>;
-                  }
-                  if (line.startsWith('### ')) {
-                    return <h3 key={index}>{line.slice(4)}</h3>;
-                  }
-                  if (line.trim() === '') {
-                    return <p key={index}>&nbsp;</p>;
-                  }
-                  return <p key={index}>{line}</p>;
-                })}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
               </div>
             </>
           ) : (

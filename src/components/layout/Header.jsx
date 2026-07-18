@@ -5,10 +5,8 @@
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
 import ModelManager from '../models/ModelManager.jsx';
-import { useApp } from '../../context/AppContext.jsx';
 
 export default function Header() {
-  const { activeModel } = useApp();
   const [showModelManager, setShowModelManager] = useState(false);
 
   return (

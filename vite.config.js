@@ -13,6 +13,16 @@ export default defineConfig({
     port: 5173,
     host: true,
     proxy: {
+      '/openai-proxy': {
+        target: 'https://api.openai.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/openai-proxy/, ''),
+      },
+      '/anthropic-proxy': {
+        target: 'https://api.anthropic.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/anthropic-proxy/, ''),
+      },
       '/weixin-proxy': {
         target: 'https://mp.weixin.qq.com',
         changeOrigin: true,

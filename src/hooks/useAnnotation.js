@@ -77,7 +77,7 @@ export function useAnnotation() {
   }, [annotations]);
 
   // 选中文本
-  const handleTextSelect = useCallback((e) => {
+  const handleTextSelect = useCallback(() => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
     if (text.length > 0) {

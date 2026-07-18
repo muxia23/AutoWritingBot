@@ -142,7 +142,6 @@ body::before {
   box-shadow: var(--shadow-sm);
 }
 
-
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -421,6 +420,10 @@ body::before {
   margin-top: var(--space-xs);
 }
 
+.form-hint-warning {
+  color: #b45309;
+}
+
 /* 表单行 */
 .form-row {
   display: grid;
@@ -550,6 +553,24 @@ body::before {
 /* ========================================
    Toast 通知 - 优雅风格
    ======================================== */
+
+/* 错误边界回退页 */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  min-height: 60vh;
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.error-boundary-message {
+  color: var(--text-secondary);
+  max-width: 480px;
+  word-break: break-word;
+}
 
 .toast {
   position: fixed;
@@ -727,28 +748,6 @@ body::before {
    输出面板
    ======================================== */
 
-.output-section {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
-}
-
-.output-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-tertiary));
-}
-
-.output-view {
-  min-height: 500px;
-}
-
 .view-toggle {
   display: flex;
   gap: var(--space-xs);
@@ -778,38 +777,9 @@ body::before {
   font-weight: 600;
 }
 
-.output-preview {
-  padding: var(--space-xl);
-  overflow-y: auto;
-  min-height: 500px;
-  max-height: 600px;
-}
-
-.output-text {
-  width: 100%;
-  min-height: 500px;
-  max-height: 600px;
-  padding: var(--space-xl);
-  border: none;
-  resize: vertical;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  line-height: 1.7;
-  color: var(--text-primary);
-  background: var(--bg-card);
-}
-
 /* ========================================
    文章编辑器
    ======================================== */
-
-.article-editor {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-light);
-}
 
 .editor-toolbar {
   display: flex;
@@ -824,49 +794,6 @@ body::before {
 .toolbar-right {
   display: flex;
   gap: var(--space-sm);
-}
-
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  transition: all var(--transition-fast);
-}
-
-.toolbar-btn:hover {
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-  background: var(--accent-light);
-}
-
-.toolbar-btn.active {
-  background: var(--ink-primary);
-  color: var(--text-inverse);
-  border-color: var(--ink-primary);
-}
-
-.editor-preview,
-.editor-textarea {
-  min-height: 500px;
-  padding: var(--space-xl);
-  overflow-y: auto;
-}
-
-.editor-textarea {
-  width: 100%;
-  border: none;
-  resize: vertical;
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  line-height: 1.8;
 }
 
 /* ========================================
@@ -896,24 +823,6 @@ body::before {
   background-color: rgba(212, 168, 83, 0.05);
 }
 
-.annotations-panel {
-  border-top: 1px solid var(--border-light);
-  max-height: 350px;
-  overflow-y: auto;
-  background: var(--bg-secondary);
-}
-
-.annotations-title {
-  padding: var(--space-md) var(--space-lg);
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-light);
-}
-
 .annotations-list {
   padding: var(--space-sm);
 }
@@ -938,44 +847,7 @@ body::before {
   opacity: 0.5;
 }
 
-.annotation-delete {
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--text-tertiary);
-  padding: var(--space-xs);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.annotation-item:hover .annotation-delete {
-  opacity: 1;
-}
-
-.annotation-delete:hover {
-  color: var(--error);
-}
-
 /* 批注对话框 */
-.selected-text-display {
-  padding: var(--space-md);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  border-left: 3px solid var(--accent-primary);
-  font-family: var(--font-mono);
-}
-
-.annotation-types {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-  margin-top: var(--space-md);
-}
 
 .annotation-type-btn {
   display: flex;
@@ -1003,16 +875,6 @@ body::before {
 /* ========================================
    人员选择器
    ======================================== */
-
-.persons-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
-}
 
 .person-checkbox {
   display: flex;
@@ -1205,47 +1067,6 @@ body::before {
    编辑器页面
    ======================================== */
 
-.editor-page {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-light);
-}
-
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
-  background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-tertiary));
-}
-
-.editor-title input {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 600;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-card);
-  width: 400px;
-  transition: all var(--transition-fast);
-}
-
-.editor-title input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1);
-}
-
-.editor-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
 .view-mode-toggle {
   display: flex;
   gap: var(--space-xs);
@@ -1295,21 +1116,6 @@ body::before {
   grid-template-columns: 1fr 1fr;
 }
 
-.editor-main {
-  padding: 0;
-  border-right: 1px solid var(--border-light);
-}
-
-.editor-main:only-child {
-  border-right: none;
-}
-
-.editor-sidebar {
-  background-color: var(--bg-secondary);
-  border-left: 1px solid var(--border-light);
-  overflow-y: auto;
-}
-
 .title-input {
   font-family: var(--font-display);
   font-size: 1.35rem;
@@ -1357,32 +1163,6 @@ body::before {
 /* ========================================
    Skills 编辑器
    ======================================== */
-
-.skills-editor-container {
-  height: calc(100vh - 280px);
-  display: flex;
-  flex-direction: column;
-}
-
-.skills-editor {
-  flex: 1;
-  width: 100%;
-  padding: var(--space-md);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  line-height: 1.7;
-  resize: none;
-  background: var(--bg-card);
-  color: var(--text-primary);
-}
-
-.skills-editor:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.1);
-}
 
 /* ========================================
    工具类
@@ -1470,9 +1250,7 @@ body::before {
     width: 100%;
   }
 
-  .annotation-types {
-    grid-template-columns: 1fr;
-  }
+  
 
   .editor-toolbar {
     flex-wrap: wrap;
@@ -2295,6 +2073,23 @@ body::before {
 
 .markdown-preview p {
   margin: var(--space-md) 0;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  margin: var(--space-md) 0;
+  padding-left: 1.5em;
+}
+
+.markdown-preview li {
+  margin: var(--space-xs) 0;
+}
+
+.markdown-preview blockquote {
+  margin: var(--space-md) 0;
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--border-medium);
+  color: var(--text-secondary);
 }
 
 /* 内容文本域 */

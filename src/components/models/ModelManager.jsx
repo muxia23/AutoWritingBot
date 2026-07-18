@@ -10,7 +10,10 @@ import Button from '../form/Button.jsx';
 import { useApp } from '../../context/AppContext.jsx';
 import { PRESET_MODELS } from '../../utils/constants.js';
 
-const EMPTY_FORM = { name: '', baseUrl: '', model: '', apiKey: '' };
+const EMPTY_FORM = { name: '', baseUrl: '', model: '', apiKey: '', temperature: '', maxTokens: '' };
+
+// OpenAI / Anthropic 官方接口不允许浏览器直接跨域调用
+const CORS_BLOCKED_HOSTS = ['api.openai.com', 'api.anthropic.com'];
 
 export default function ModelManager({ onClose }) {
   const { modelConfigs, activeModelId, setActiveModelId, addModelConfig, updateModelConfig, removeModelConfig, showToast } = useApp();
@@ -43,7 +46,14 @@ export default function ModelManager({ onClose }) {
 
   const handleOpenEdit = (config) => {
     setEditingId(config.id);
-    setForm({ name: config.name, baseUrl: config.baseUrl, model: config.model, apiKey: config.apiKey });
+    setForm({
+      name: config.name,
+      baseUrl: config.baseUrl,
+      model: config.model,
+      apiKey: config.apiKey,
+      temperature: config.temperature ?? '',
+      maxTokens: config.maxTokens ?? ''
+    });
     setSelectedPreset('');
     setShowApiKey(false);
     setShowForm(true);
@@ -61,11 +71,39 @@ export default function ModelManager({ onClose }) {
     if (!form.model.trim()) { showToast('请填写模型 ID', 'error'); return; }
     if (!form.apiKey.trim()) { showToast('请填写 API Key', 'error'); return; }
 
+    // 可选参数：留空 = 使用默认值
+    let temperature;
+    if (String(form.temperature).trim() !== '') {
+      temperature = Number(form.temperature);
+      if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
+        showToast('temperature 需为 0 ~ 2 之间的数字', 'error');
+        return;
+      }
+    }
+    let maxTokens;
+    if (String(form.maxTokens).trim() !== '') {
+      maxTokens = parseInt(form.maxTokens, 10);
+      if (Number.isNaN(maxTokens) || maxTokens <= 0) {
+        showToast('max_tokens 需为正整数', 'error');
+        return;
+      }
+    }
+
+    // undefined 的键在 JSON 序列化时会被丢弃，等同于「未设置」
+    const config = {
+      name: form.name,
+      baseUrl: form.baseUrl,
+      model: form.model,
+      apiKey: form.apiKey,
+      temperature,
+      maxTokens
+    };
+
     if (editingId) {
-      updateModelConfig(editingId, form);
+      updateModelConfig(editingId, config);
       showToast('模型配置已更新');
     } else {
-      addModelConfig(form);
+      addModelConfig(config);
       showToast('模型已添加');
     }
     handleCancelForm();
@@ -175,6 +213,12 @@ export default function ModelManager({ onClose }) {
                 value={form.baseUrl}
                 onChange={e => setForm(p => ({ ...p, baseUrl: e.target.value }))}
               />
+              {CORS_BLOCKED_HOSTS.some(h => form.baseUrl.includes(h)) && (
+                <p className="form-hint form-hint-warning">
+                  注意：该服务商官方接口不允许浏览器直接跨域调用（CORS），
+                  请改用本站代理地址（OpenAI 填 /openai-proxy/v1，Claude 填 /anthropic-proxy/v1，预设已配好）
+                </p>
+              )}
             </div>
 
             <div className="form-group">
@@ -202,6 +246,34 @@ export default function ModelManager({ onClose }) {
                 </button>
               </div>
               <p className="form-hint">API Key 仅存储在本地浏览器，不会上传到任何服务器</p>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>temperature（可选）</label>
+                <input
+                  className="form-control"
+                  type="number"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  placeholder="默认 0.7"
+                  value={form.temperature}
+                  onChange={e => setForm(p => ({ ...p, temperature: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label>max_tokens（可选）</label>
+                <input
+                  className="form-control"
+                  type="number"
+                  min="1"
+                  step="100"
+                  placeholder="默认 4000"
+                  value={form.maxTokens}
+                  onChange={e => setForm(p => ({ ...p, maxTokens: e.target.value }))}
+                />
+              </div>
             </div>
 
             <div className="model-form-actions">

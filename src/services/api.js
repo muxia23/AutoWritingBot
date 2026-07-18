@@ -131,8 +131,8 @@ export const ApiService = {
         }
       }
     } catch (error) {
+      // AbortError 也必须抛出：吞掉会让调用方把半截文本当成功结果继续流转
       reader.cancel();
-      if (error.name === 'AbortError') return fullText;
       throw error;
     }
 

@@ -8,16 +8,18 @@
 import { useState, useRef } from 'react';
 import Modal from '../layout/Modal.jsx';
 import { UploadCloud } from 'lucide-react';
+import { useApp } from '../../context/AppContext.jsx';
 import { MAX_HISTORY } from '../../utils/historyUtils.js';
 
 export default function ImportExport({ onClose, onImport }) {
+  const { showToast } = useApp();
   const fileInputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   const pick = (file) => {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.json')) {
-      alert('请选择 .json 格式的备份文件');
+      showToast('请选择 .json 格式的备份文件', 'error');
       return;
     }
     onImport(file);

@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { Clock, FileText, Trash2, Download, Upload } from 'lucide-react';
+import { useApp } from '../../context/AppContext.jsx';
 import { useConversationHistory } from '../../hooks/useConversationHistory.js';
 import { Formatters } from '../../utils/formatters.js';
 import ConversationItem from './ConversationItem.jsx';
@@ -13,6 +14,7 @@ export default function ConversationHistory({
   onSelectConversation,
   onDeleteConversation
 }) {
+  const { showToast } = useApp();
   const {
     history,
     clearHistory,
@@ -36,10 +38,10 @@ export default function ConversationHistory({
     importHistory(file)
       .then(() => {
         setShowImportExport(false);
-        alert('对话历史导入成功！');
+        showToast('对话历史导入成功');
       })
       .catch((error) => {
-        alert(`导入失败：${error.message}`);
+        showToast(`导入失败：${error.message}`, 'error');
       });
   };
 

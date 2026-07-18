@@ -9,6 +9,7 @@ import ImageLibraryPage from './pages/ImageLibraryPage.jsx';
 import Header from './components/layout/Header.jsx';
 import TabNav from './components/layout/TabNav.jsx';
 import Toast from './components/common/Toast.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 
 function AppLayout() {
   const { toast, clearToast } = useApp();
@@ -17,12 +18,14 @@ function AppLayout() {
       <Header />
       <TabNav />
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Navigate to="/chat" replace />} />
-          <Route path="/chat" element={<ChatGeneratePage />} />
-          <Route path="/prompt" element={<PromptPage />} />
-          <Route path="/images" element={<ImageLibraryPage />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Navigate to="/chat" replace />} />
+            <Route path="/chat" element={<ChatGeneratePage />} />
+            <Route path="/prompt" element={<PromptPage />} />
+            <Route path="/images" element={<ImageLibraryPage />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
       {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
     </div>

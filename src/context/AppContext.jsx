@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage.js';
-import { STORAGE_KEYS, ROUTES } from '../utils/constants.js';
+import { STORAGE_KEYS } from '../utils/constants.js';
 
 const AppContext = createContext(null);
 
@@ -18,9 +18,6 @@ export function AppProvider({ children }) {
 
   // 向后兼容：apiKey
   const apiKey = activeModel?.apiKey || '';
-
-  // 当前标签页
-  const [currentTab, setCurrentTab] = useLocalStorage('current_tab', ROUTES.GENERATE);
 
   // Toast 通知状态
   const [toast, setToast] = useState(null);
@@ -72,8 +69,6 @@ export function AppProvider({ children }) {
     // 向后兼容
     apiKey,
     // 全局 UI
-    currentTab,
-    setCurrentTab,
     toast,
     showToast,
     clearToast

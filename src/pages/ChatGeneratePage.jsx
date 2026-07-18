@@ -201,10 +201,6 @@ export default function ChatGeneratePage() {
     setArticleRefs([]);
   };
 
-  const handleQuickOptionClick = (type) => {
-    setSelectedActivityType(type);
-  };
-
   return (
     <div className="chat-page">
       {/* 左侧面板（30%） */}

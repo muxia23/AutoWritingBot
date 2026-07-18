@@ -2,7 +2,7 @@
  * 提示词管理 Hook
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { DEFAULT_PROMPT } from '../utils/default-prompt.js';
 import { DEFAULT_STEP_PROMPTS } from '../utils/default-step-prompts.js';
 import { useLocalStorage } from './useLocalStorage.js';

@@ -2,7 +2,7 @@
  * 对话历史管理 Hook
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage.js';
 import { STORAGE_KEYS, FILE_TEMPLATES } from '../utils/constants.js';
 import { appendConversation, mergeImportedConversations } from '../utils/historyUtils.js';
@@ -11,7 +11,7 @@ import { appendConversation, mergeImportedConversations } from '../utils/history
 const generateConversationId = () => `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 export function useConversationHistory(onError) {
-  const [history, setHistory, removeHistory] = useLocalStorage(STORAGE_KEYS.CONVERSATION_HISTORY, [], onError);
+  const [history, setHistory] = useLocalStorage(STORAGE_KEYS.CONVERSATION_HISTORY, [], onError);
   const [currentConversation, setCurrentConversation] = useState(null);
 
   // 添加新对话
