@@ -3,7 +3,7 @@
  * 左侧：配置 + Pipeline状态（30%）| 右侧：Canvas编辑器（70%）
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, RotateCcw, Plus, X, GripVertical, ChevronDown, ChevronUp, ImageIcon, FileSearch, Square } from 'lucide-react';
 import CanvasEditor from '../components/canvas/CanvasEditor.jsx';
 import Button from '../components/form/Button.jsx';
@@ -15,6 +15,7 @@ import { useApp } from '../context/AppContext.jsx';
 import { usePromptContext } from '../context/PromptContext.jsx';
 import { useConversation } from '../hooks/useConversation.js';
 import { usePipeline } from '../hooks/usePipeline.js';
+import { useConversationHistory } from '../hooks/useConversationHistory.js';
 import { FIXED_PERSONS, ACTIVITY_TYPES, ERROR_MESSAGES } from '../utils/constants.js';
 
 export default function ChatGeneratePage() {
@@ -53,6 +54,37 @@ export default function ChatGeneratePage() {
     setCurrentTitle,
     showToast,
   });
+
+  const handleHistoryError = useCallback(() => {
+    showToast('对话历史保存失败，本地存储空间可能已满', 'error');
+  }, [showToast]);
+
+  const { addConversation } = useConversationHistory(handleHistoryError);
+
+  // pipeline 完成时自动存一条历史。用 ref 防止 isDone 保持 true 期间重复写入。
+  const savedForRunRef = useRef(false);
+
+  useEffect(() => {
+    if (isRunning) {
+      savedForRunRef.current = false;
+      return;
+    }
+    if (!isDone || savedForRunRef.current || !currentArticle) return;
+    savedForRunRef.current = true;
+    addConversation({
+      type: 'chat',
+      title: currentTitle || '未命名推文',
+      output: currentArticle,
+      input: {
+        userInput,
+        activityType: selectedActivityType,
+        persons: orderedPersons,
+        imageIds: selectedImages.map(i => i.id),
+        articleRefs,
+      },
+    });
+  }, [isDone, isRunning, currentArticle, currentTitle, userInput, selectedActivityType,
+      orderedPersons, selectedImages, articleRefs, addConversation]);
 
   // ── 领导管理 ──────────────────────────────────────
 
