@@ -121,6 +121,25 @@ npm run dev
 
 ## 📦 生产部署
 
+### 一键部署（Docker，推荐）
+
+服务器需已安装 `docker` 与 `git`：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/muxia23/AutoWritingBot/main/deploy.sh -o deploy.sh
+bash deploy.sh 2567          # 参数为端口，默认 2567
+```
+
+脚本会拉取代码、构建镜像、重建容器、等待健康检查并校验产物。**可重复执行**，日常更新跑同一条命令即可。
+
+> ⚠️ **反向代理请指向 `http://127.0.0.1:2567`，不要用「静态网站」方式指向 `dist` 目录。**
+>
+> 静态方式下域名不经过容器，容器更新不会生效；且 Vite 产物文件名带 hash，残留的旧 `index.html` 会引用已被删除的文件，导致整页白屏——此时重启容器无效，因为请求根本没走到容器。
+>
+> 容器内 nginx 已配好防白屏规则：`index.html` 设 `no-store`，`/assets/` 下的 hash 产物长期强缓存。若外层反代又给 `index.html` 加缓存，会盖掉这条规则。
+
+### 手动构建
+
 ```bash
 npm run build   # 产物输出到 dist/
 ```
