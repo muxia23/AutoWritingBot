@@ -173,6 +173,28 @@ body::before {
   flex-shrink: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.header-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
 /* ========================================
    标签页导航 - 极简风格
    ======================================== */

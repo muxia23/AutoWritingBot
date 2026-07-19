@@ -2,6 +2,9 @@
  * 常量定义文件
  */
 
+// 项目仓库地址
+export const GITHUB_URL = 'https://github.com/muxia23/AutoWritingBot';
+
 // 固定人名列表（按 skills 定义的顺序）
 export const FIXED_PERSONS = [
   { id: 'fangjie', name: '常务副院长方捷', gender: 'male' },
