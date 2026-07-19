@@ -147,8 +147,31 @@ server {
         proxy_ssl_server_name on;
         proxy_ssl_protocols TLSv1.2 TLSv1.3;
     }
+
+    # ✅ OpenAI / Anthropic API 代理（两家官方接口不允许浏览器跨域直连）
+    # 前端把模型的 API 地址配成 /openai-proxy/v1 或 /anthropic-proxy/v1 即可走这里，
+    # 内置预设已默认使用代理路径。DeepSeek、豆包（火山方舟）等允许浏览器直连，无需代理。
+    location /openai-proxy/ {
+        proxy_pass https://api.openai.com/;
+        proxy_ssl_server_name on;
+        proxy_set_header Host api.openai.com;
+        proxy_http_version 1.1;
+        proxy_buffering off;          # SSE 流式输出不能缓冲
+        proxy_read_timeout 300s;
+    }
+
+    location /anthropic-proxy/ {
+        proxy_pass https://api.anthropic.com/;
+        proxy_ssl_server_name on;
+        proxy_set_header Host api.anthropic.com;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+    }
 }
 ```
+
+> 仓库自带的 `nginx.conf`（Docker 部署使用）已包含上述全部代理配置；本地开发时 `vite.config.js` 内置了同样的代理路径，开箱即用。
 
 ```bash
 nginx -t && nginx -s reload
@@ -206,7 +229,8 @@ src/
 ## 🔒 隐私说明
 
 - 所有配置（API Key、提示词、对话历史）存储在浏览器 localStorage，图片二进制存储在 IndexedDB，均**不经过任何中间服务器**
-- API 请求由浏览器直接发送至对应的 AI 服务商
+- DeepSeek 等支持浏览器跨域的服务商，API 请求由浏览器**直接发送**至服务商
+- OpenAI / Anthropic 官方接口不允许浏览器跨域，请求经由**你自己部署的 nginx 反代**转发（纯转发、不落盘、不记录），不涉及任何第三方中转
 
 ## 🤝 Contributing
 
