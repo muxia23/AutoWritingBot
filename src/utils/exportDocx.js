@@ -5,16 +5,7 @@
  * docx 库动态按需加载，不影响首屏体积
  */
 
-// 中文引号替换（英文引号 → 中文引号）
-function normalizeQuotes(text) {
-  return text
-    .replace(/"([^"]*)"/g, '\u201c$1\u201d')
-    .replace(/'([^']*)'/g, '\u2018$1\u2019')
-    .replace(/"/g, '\u201c')
-    .replace(/"/g, '\u201d')
-    .replace(/'/g, '\u2018')
-    .replace(/'/g, '\u2019');
-}
+import { formatArticleText } from './formatText.js';
 
 // 字号（半磅单位，docx 规范）
 const SIZE = {
@@ -29,51 +20,57 @@ const FONT = {
   BODY: '宋体',
 };
 
+// 单倍行距。240 twip = 1 行
+const LINE_SPACING = { line: 240, lineRule: 'auto' };
+
 /**
- * 生成并下载 .docx 文件
- * @param {string} title 文章标题
- * @param {string} content Markdown 正文内容
+ * 构造 .docx 并返回 Blob。
+ * 与 downloadAsDocx 分离，是为了让压缩包导出复用同一份文档构造逻辑。
  */
-export async function downloadAsDocx(title, content) {
+export async function buildDocxBlob(title, content) {
   const { Document, Packer, Paragraph, TextRun, AlignmentType, convertInchesToTwip } =
     await import('docx');
 
-  const T = (text) => normalizeQuotes(text);
+  // 兜底：正文在 AI 生成时已修正过，但用户可能手动编辑引入新的格式问题。
+  // formatArticleText 幂等，重复调用安全
+  const text = formatArticleText(content);
+  const docTitle = formatArticleText(title);
 
-  const mkTitle = (text) => new Paragraph({
+  const mkTitle = (t) => new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: { before: 200, after: 200 },
-    children: [new TextRun({ text: T(text), font: FONT.TITLE, size: SIZE.TITLE, bold: true })],
+    spacing: { before: 200, after: 200, ...LINE_SPACING },
+    children: [new TextRun({ text: t, font: FONT.TITLE, size: SIZE.TITLE, bold: true })],
   });
 
-  const mkH2 = (text) => new Paragraph({
-    spacing: { before: 160, after: 80 },
-    children: [new TextRun({ text: T(text), font: FONT.HEADING, size: SIZE.HEADING, bold: true })],
+  const mkH2 = (t) => new Paragraph({
+    spacing: { before: 160, after: 80, ...LINE_SPACING },
+    children: [new TextRun({ text: t, font: FONT.HEADING, size: SIZE.HEADING, bold: true })],
   });
 
-  const mkH3 = (text) => new Paragraph({
-    spacing: { before: 120, after: 60 },
-    children: [new TextRun({ text: T(text), font: FONT.HEADING, size: SIZE.HEADING })],
+  const mkH3 = (t) => new Paragraph({
+    spacing: { before: 120, after: 60, ...LINE_SPACING },
+    children: [new TextRun({ text: t, font: FONT.HEADING, size: SIZE.HEADING })],
   });
 
-  const mkBody = (text) => new Paragraph({
-    spacing: { before: 0, after: 60 },
+  const mkBody = (t) => new Paragraph({
+    spacing: { before: 0, after: 60, ...LINE_SPACING },
     indent: { firstLine: convertInchesToTwip(0.28) }, // 首行缩进约两字符
-    children: [new TextRun({ text: T(text), font: FONT.BODY, size: SIZE.BODY })],
+    children: [new TextRun({ text: t, font: FONT.BODY, size: SIZE.BODY })],
   });
 
   const mkEmpty = () => new Paragraph({
+    spacing: { ...LINE_SPACING },
     children: [new TextRun({ text: '', font: FONT.BODY, size: SIZE.BODY })],
   });
 
   // 解析 Markdown 行
   const paragraphs = [];
-  if (title) {
-    paragraphs.push(mkTitle(title));
+  if (docTitle) {
+    paragraphs.push(mkTitle(docTitle));
     paragraphs.push(mkEmpty());
   }
 
-  for (const line of content.split('\n')) {
+  for (const line of text.split('\n')) {
     if (line.startsWith('### '))      paragraphs.push(mkH3(line.slice(4).trim()));
     else if (line.startsWith('## '))  paragraphs.push(mkH2(line.slice(3).trim()));
     else if (line.startsWith('# '))   paragraphs.push(mkTitle(line.slice(2).trim()));
@@ -104,13 +101,23 @@ export async function downloadAsDocx(title, content) {
     }],
   });
 
-  const blob = await Packer.toBlob(doc);
+  return Packer.toBlob(doc);
+}
+
+/**
+ * 生成并下载 .docx 文件
+ */
+export async function downloadAsDocx(title, content) {
+  const blob = await buildDocxBlob(title, content);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${(title || '推文').slice(0, 30)}.docx`;
+  // 文件名同样过修正：否则内容里是「学院举办AI讲座」而文件名带空格
+  a.download = `${(formatArticleText(title) || '推文').slice(0, 30)}.docx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // 下载是异步的：同步 revoke 会在浏览器读完 blob 前就吊销 URL，
+  // 结果是下载列表里有条目但文件为空、打不开
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

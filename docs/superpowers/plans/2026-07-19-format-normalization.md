@@ -41,6 +41,10 @@
 - 运行测试：`npm test`（等价 `vitest run`）
 - 测试的 `describe`/`it` 描述用中文
 
+**行号会漂移。** 本计划记录的行号取自 2026-07-19 的工作区快照，实施时请**按内容定位**（函数名、相邻代码），把行号当作参考而非依据。若某处内容与计划描述不符，停下来报告，不要凭猜测改动。
+
+---
+
 **一个已经踩过的坑：** `URL.revokeObjectURL` 不能在 `link.click()` 之后同步调用。浏览器下载是异步的，同步吊销会导致下载列表出现条目但文件为空、打不开。本计划中所有下载入口都必须延后 60 秒回收。
 
 ---
@@ -602,7 +606,7 @@ zip 用 store 模式，图片和 docx 已是压缩格式。"
 
 **Files:**
 - Modify: `src/hooks/usePipeline.js:115,163`
-- Modify: `src/components/canvas/CanvasEditor.jsx:81,102`
+- Modify: `src/components/canvas/CanvasEditor.jsx:82,102`
 
 - [ ] **Step 1: pipeline 阶段落定处接入**
 
@@ -646,13 +650,13 @@ import { formatArticleText } from '../utils/formatText.js';
 import { formatArticleText } from '../../utils/formatText.js';
 ```
 
-将第 81 行 `onContentChange(result);` 改为：
+将第 82 行（`handleApplyAnnotation` 内）的 `onContentChange(result);` 改为：
 
 ```js
       onContentChange(formatArticleText(result));
 ```
 
-将第 102 行 `onContentChange(result);` 改为：
+将第 102 行（`handleApplyAllAnnotations` 内）的 `onContentChange(result);` 改为：
 
 ```js
       onContentChange(formatArticleText(result));
