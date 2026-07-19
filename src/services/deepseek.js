@@ -90,25 +90,31 @@ export const DeepSeekAPI = {
   },
 
   /**
-   * 批量应用批注
-   * - 含 rewrite 类型：修改后检查全文连贯性
-   * - 仅 fix/style 类型：严格局部修改，其余不变
+   * 批量应用批注：规则按条生效——
+   * rewrite 允许衔接调整，fix/style 严格局部修改；
+   * 每条批注附全文中的前后文位置参考，避免同文多处出现时改错位置
    */
-  async applyAnnotations(skillsPrompt, articleText, annotations, modelConfig) {
+  async applyAnnotations(systemPrompt, articleText, annotations, modelConfig) {
     const typeMap = { rewrite: '重写', fix: '修正', style: '润色' };
 
-    const annotationPrompts = annotations.map(ann =>
-      `[批注] ${typeMap[ann.type] || ann.type} "${ann.selectedText}"：${ann.content}`
-    ).join('\n');
+    const annotationPrompts = annotations.map(ann => {
+      let line = `[批注] ${typeMap[ann.type] || ann.type} "${ann.selectedText}"：${ann.content}`;
+      const ctx = locateContext(articleText, ann.selectedText);
+      if (ctx) line += `\n  位置参考：…${ctx.before}【批注文字】${ctx.after}…`;
+      return line;
+    }).join('\n');
 
-    const hasRewrite = annotations.some(ann => ann.type === 'rewrite');
+    const userPrompt = `请根据以下批注逐条修改推文，每条批注只作用于其指出的位置（有"位置参考"时以该处为准）：
+- 「重写」批注：完成修改后可对相邻段落做必要的衔接调整，保持全文连贯
+- 「修正」「润色」批注：仅改动批注涉及的文字，其余内容逐字保留
 
-    const userPrompt = hasRewrite
-      ? `请根据以下批注修改推文中的指定内容，修改完成后，检查全文逻辑连贯性，必要时调整相关段落使整体流畅：\n\n${annotationPrompts}\n\n推文内容：\n${articleText}`
-      : `请仅根据以下批注修正推文中的指定内容，其他部分严格保持不变，不得额外修改：\n\n${annotationPrompts}\n\n推文内容：\n${articleText}`;
+${annotationPrompts}
+
+推文内容：
+${articleText}`;
 
     const messages = [
-      { role: 'system', content: skillsPrompt },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ];
 
@@ -134,23 +140,23 @@ export const DeepSeekAPI = {
   },
 
   /**
-   * 应用单个批注
-   * - fix/style：仅修正指定段落，其余不变
-   * - rewrite：修正后检查全文连贯性
+   * 应用单个批注（批量路径的单条特例）
    */
   async applyInlineAnnotation(systemPrompt, articleContent, annotation, modelConfig) {
-    const typeMap = { rewrite: '重写', fix: '修正', style: '润色' };
-    const typeLabel = typeMap[annotation.type] || annotation.type;
-
-    const userPrompt = annotation.type === 'rewrite'
-      ? `请根据批注重写推文中的指定内容，修改完成后检查全文逻辑连贯性，必要时调整相关段落：\n\n[批注] ${typeLabel} "${annotation.selectedText}"：${annotation.content}\n\n推文内容：\n${articleContent}`
-      : `请仅根据批注修正推文中的指定内容，其他部分严格保持不变，不得额外修改：\n\n[批注] ${typeLabel} "${annotation.selectedText}"：${annotation.content}\n\n推文内容：\n${articleContent}`;
-
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ];
-
-    return this.chat(messages, modelConfig);
+    return this.applyAnnotations(systemPrompt, articleContent, [annotation], modelConfig);
   }
 };
+
+/**
+ * 在全文中定位选中文字，返回前后各 30 字作为位置锚点。
+ * 找不到（如正文在批注后被手动编辑过）或没有前后文时返回 null。
+ * 同文多处出现时锚定首次出现——与旧行为一致，但至少给了模型一个明确参照。
+ */
+function locateContext(articleText, selectedText) {
+  const idx = articleText.indexOf(selectedText);
+  if (idx === -1) return null;
+  const before = articleText.slice(Math.max(0, idx - 30), idx).replace(/\n+/g, ' ');
+  const after = articleText.slice(idx + selectedText.length, idx + selectedText.length + 30).replace(/\n+/g, ' ');
+  if (!before && !after) return null;
+  return { before, after };
+}

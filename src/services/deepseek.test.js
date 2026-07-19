@@ -84,3 +84,62 @@ describe('DeepSeekAPI 模型参数', () => {
     expect(body.stream).toBe(true);
   });
 });
+
+describe('DeepSeekAPI 批注应用', () => {
+  const mockPost = () => vi.spyOn(ApiService, 'post').mockResolvedValue({
+    choices: [{ message: { content: '改后的正文' } }]
+  });
+  const userPromptOf = (post) => post.mock.calls[0][1].messages[1].content;
+
+  const article = '开头段落写了活动背景介绍。中间这句话需要修改一下。结尾段落做了总结与展望。';
+
+  it('批注附带全文中的前后文位置参考', async () => {
+    const post = mockPost();
+
+    await DeepSeekAPI.applyAnnotations('sys', article, [
+      { type: 'fix', selectedText: '中间这句话需要修改一下', content: '改成主动语态' }
+    ], { apiKey: 'k' });
+
+    const prompt = userPromptOf(post);
+    expect(prompt).toContain('位置参考');
+    expect(prompt).toContain('活动背景介绍。');   // 前文
+    expect(prompt).toContain('。结尾段落');        // 后文
+  });
+
+  it('选中文字在全文中找不到时不输出位置参考', async () => {
+    const post = mockPost();
+
+    await DeepSeekAPI.applyAnnotations('sys', article, [
+      { type: 'fix', selectedText: '早已不存在的句子', content: '随便改改' }
+    ], { apiKey: 'k' });
+
+    expect(userPromptOf(post)).not.toContain('【批注文字】');
+  });
+
+  it('批量混合批注时按条约束：重写与修正/润色规则同时在场', async () => {
+    const post = mockPost();
+
+    await DeepSeekAPI.applyAnnotations('sys', article, [
+      { type: 'rewrite', selectedText: '开头段落写了活动背景介绍', content: '更有感染力' },
+      { type: 'fix', selectedText: '中间这句话需要修改一下', content: '改错别字' }
+    ], { apiKey: 'k' });
+
+    const prompt = userPromptOf(post);
+    expect(prompt).toContain('「重写」');
+    expect(prompt).toContain('衔接');
+    expect(prompt).toContain('逐字保留');   // 修正/润色的严格约束不再因重写在场而消失
+  });
+
+  it('applyInlineAnnotation 复用批量路径，格式一致', async () => {
+    const post = mockPost();
+
+    await DeepSeekAPI.applyInlineAnnotation('sys', article, {
+      type: 'style', selectedText: '结尾段落做了总结与展望', content: '更简洁'
+    }, { apiKey: 'k' });
+
+    const prompt = userPromptOf(post);
+    expect(prompt).toContain('[批注] 润色');
+    expect(prompt).toContain('位置参考');
+    expect(post.mock.calls[0][1].messages[0].content).toBe('sys');
+  });
+});
